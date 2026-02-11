@@ -1,10 +1,10 @@
 ### 📊 Mis Estadísticas
-[![Wakatime](https://wakatime.com/badge/user/67474360-e697-465a-a318-90bbf42538a8.svg)](https://wakatime.com/@KuroFG)
+[![Wakatime](https://wakatime.com/badge/user/61018de8-b42e-4f30-aa6a-d19283570bca.svg)](https://wakatime.com/@mauroz9)
 
 ![Stats](./profile/stats.svg)
 ![Top Languages](./profile/top-langs.svg)
 
-[![GitHub Streak](https://streak-stats.demolab.com?user=Kuro-0-0&theme=tokyonight&hide_border=true&border_radius=4&locale=es&short_numbers=true)](https://git.io/streak-stats)
+[![GitHub Streak](https://streak-stats.demolab.com?user=mauroz9&theme=tokyonight&hide_border=true&border_radius=4&locale=es&short_numbers=true)](https://git.io/streak-stats)
 
 ---
 
@@ -20,6 +20,6 @@
 ---
 
 ### 📫 Conecta | Contacta conmigo
-- LinkedIn: [Pablo Garcia Maria](https://www.linkedin.com/in/pablo-garcia-maria-0020b52b1)
-- Wakatime: [KuroFG](https://wakatime.com/@KuroFG)
-- Email: pgarmar230@gmail.com
+- LinkedIn: [Mauro Serrano Ruiz](https://www.linkedin.com/in/mauro-serrano-8b4191366)
+- Wakatime: [mauroz9](https://wakatime.com/@mauroz9)
+- Email: mauro.serranoo26@gmail.com
