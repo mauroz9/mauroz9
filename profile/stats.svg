@@ -9,7 +9,7 @@
         aria-labelledby="descId"
       >
         <title id="titleId">Mauro Serrano's GitHub Stats, Rank: A-</title>
-        <desc id="descId">Total Stars Earned: 6, Total Commits  (last year) : 1467, Total PRs: 294, Total Issues: 178, Contributed to (last year): 2</desc>
+        <desc id="descId">Total Stars Earned: 6, Total Commits  (last year) : 1471, Total PRs: 295, Total Issues: 179, Contributed to (last year): 2</desc>
         <style>
           .header {
             font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif;
@@ -73,7 +73,7 @@
         stroke-dashoffset: 251.32741228718345;
       }
       to {
-        stroke-dashoffset: 89.82446640815884;
+        stroke-dashoffset: 89.79775073324875;
       }
     }
   
@@ -192,7 +192,7 @@
         x="219.01"
         y="12.5"
         data-testid="prs"
-      >294</text>
+      >295</text>
     </g>
   </g><g transform="translate(0, 75)">
     <g class="stagger" style="animation-delay: 900ms" transform="translate(25, 0)">
@@ -207,7 +207,7 @@
         x="219.01"
         y="12.5"
         data-testid="issues"
-      >178</text>
+      >179</text>
     </g>
   </g><g transform="translate(0, 100)">
     <g class="stagger" style="animation-delay: 1050ms" transform="translate(25, 0)">
