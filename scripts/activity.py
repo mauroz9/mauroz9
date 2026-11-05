@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tarjeta de actividad del perfil (profile/activity-dark.svg y activity-light.svg).
+"""Tarjeta de actividad del perfil (profile/activity.svg).
 
 Datos: API GraphQL de GitHub con el token de GH_TOKEN (o GITHUB_TOKEN). Con un token del
 propio usuario incluye la actividad en repos privados, sin enseñar nada de su código.
@@ -106,7 +106,7 @@ def card(name: str, t: dict, s: dict, today: dt.date) -> str:
     figures = [(fmt(s["total"]), "contribuciones"), (fmt(s["active"]), "días con actividad"),
                (f'{s["current"]} {"día" if s["current"] == 1 else "días"}', "racha actual"),
                (f'{s["longest"]} días', "racha más larga")]
-    foot = f"Datos de la API de GitHub. Actualizado el {today.day} {MESES[today.month - 1]} {today.year}."
+    foot = f"Actualizado el {today.day} {MESES[today.month - 1]} {today.year}"
 
     parts, used_geist, used_outfit, used_med = [], title + sub + foot, "", ""
 
@@ -208,9 +208,10 @@ def card(name: str, t: dict, s: dict, today: dt.date) -> str:
 def main() -> None:
     s = stats(fetch())
     today = dt.datetime.now(dt.timezone.utc).date()
-    for name, t in THEMES.items():
-        check_contrast([(f"{name} texto", t["muted"], t["bg"], False), (f"{name} cifras", t["fg"], t["bg"], True)])
-        (OUT / f"activity-{name}.svg").write_text(card(name, t, s, today), encoding="utf-8")
+    # solo tema oscuro, como el resto de piezas de la marca (ver build.py)
+    t = THEMES["dark"]
+    check_contrast([("texto", t["muted"], t["bg"], False), ("cifras", t["fg"], t["bg"], True)])
+    (OUT / "activity.svg").write_text(card("dark", t, s, today), encoding="utf-8")
     print(f"ok: {s['total']} contribuciones, racha {s['current']}/{s['longest']}, {len(s['langs'])} lenguajes")
 
 

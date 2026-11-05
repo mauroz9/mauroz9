@@ -1,160 +1,285 @@
 #!/usr/bin/env python3
-"""Genera el hero del perfil de GitHub (versión oscura y clara) en profile/.
+"""Genera las piezas visuales del perfil de GitHub en profile/: hero, fichas de proyecto y botones.
 
-Uso: python3 scripts/build.py      (requiere fonttools y brotli)
+Uso: python3 scripts/build.py      (requiere fonttools y brotli: scripts/requirements.txt)
 
-Dirección de diseño: la marca Quobit (styles/tokens.css del repo quobit).
+Dirección de diseño: la marca Quobit (repo quobit: styles/tokens.css, components/Hero,
+components/Button y el prototipo v10 de docs/prototype).
 Lectura: cabecera de perfil para posibles clientes y desarrolladores, en el lenguaje
-visual de Quobit; ENERGY 2 / RHYTHM 2 / MOTION 1 (imagen estática).
+visual de quobit.es; ENERGY 2 / RHYTHM 2 / MOTION 1 (imágenes estáticas).
 
 Decisiones y su porqué (anti-slop R-31):
-- Fondo azul marino liso #070d20: es el fondo de quobit.es; liso, porque la profundidad
-  la dan las polaroids, no un degradado ni una rejilla.
-- Polaroids con nombre a mano: motivo propio de Quobit (sección Equipo de quobit.es).
-  Aquí enseñan capturas reales de los productos, no maquetas.
-- Sombra solo en las polaroids: son papel sobre una mesa; es la única elevación.
-- Ámbar a mano (#f2d58a, «hand» en tokens.css): el único acento. Subraya la frase clave
-  y escribe la nota sobre los productos.
-- Outfit para el nombre, Geist para el texto y Caveat para lo escrito a mano: las tres
-  tipografías de quobit.es.
-- Estático: una imagen de perfil se mira en dos segundos; el movimiento no aportaba nada.
+- Solo tema oscuro: Quobit no tiene tema claro (tokens.css define uno), y el azul marino
+  es su identidad; en el modo claro de GitHub se ven como piezas de la marca.
+- Hero calcado de la estructura del de quobit.es: etiqueta con chincheta, titular en Outfit
+  con el subrayado a mano en azul de la marca, entradilla y la Q 3D con su halo azul.
+  El halo y el leve degradado del fondo son los de Hero.module.css: marca, no decoración.
+- Sin botones dentro del hero: en una imagen no se pueden pulsar. Los botones de verdad
+  van justo debajo, como enlaces.
+- Fichas de proyecto como las de «Lo que ya funciona» del prototipo: captura en un marco de
+  ventana, línea de estado y etiqueta a mano. Las capturas son las webs reales a 1280×800,
+  enteras, sin recortar.
+- Ritmo variado: ficha ancha, dos medias y otra ancha invertida, en vez de cuatro iguales.
+- Iconos Phosphor: los que usa quobit.es (sprite del prototipo).
+- Verde de estado (--ok) solo en el punto «en producción»: es un estado real comprobado.
 """
 from __future__ import annotations
 
 import base64
 
-from svgkit import ROOT, check_contrast, esc, family, font_css, text_width
+from svgkit import (ROOT, check_contrast, esc, family, font_css, icon_path, text_width,
+                    wrap)
 
 OUT = ROOT / "profile"
-SHOTS = ROOT / "assets" / "shots"
+ASSETS = ROOT / "assets"
 OUT.mkdir(exist_ok=True)
 
 SANS_FB = "'Helvetica Neue', Helvetica, Arial, sans-serif"
 HAND_FB = "'Bradley Hand', 'Segoe Print', cursive"
+F_TITLE, F_BODY, F_MED, F_HAND = (family("OutfitSemi", SANS_FB), family("Geist", SANS_FB),
+                                  family("GeistMedium", SANS_FB), family("Caveat", HAND_FB))
 
-THEMES = {
-    "dark": dict(
-        bg="#070d20", fg="#eceff7", muted="#a3adc6", ink="#8fb0ff", hand="#f2d58a",
-        word="#cde8fe", paper="#e8ebf2", paper_ink="#1c2a55", shadow="#000000", shadow_op=0.55,
-    ),
-    "light": dict(
-        bg="#f1f3f8", fg="#0b1430", muted="#45507a", ink="#1f45c4", hand="#9a6b00",
-        word="#1c2a55", paper="#ffffff", paper_ink="#1c2a55", shadow="#1c2a55", shadow_op=0.22,
-    ),
+# tokens.css de Quobit
+T = dict(bg="#070d20", surface="#0c1530", surface2="#111c3d", fg="#eceff7", muted="#a3adc6",
+         dim="#7c88a8", accent="#2f5bea", ink="#8fb0ff", cyan="#3cc6f5", pale="#cfe0ff",
+         ok="#5dd3a0", word="#cde8fe")
+
+
+def b64(path, mime):
+    return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()
+
+
+def word_path() -> str:
+    import re
+    return re.search(r' d="([^"]+)"', (ASSETS / "brand" / "quobit-word.svg").read_text()).group(1)
+
+
+def icon(name, x, y, size, color):
+    k = size / 256
+    return f'<path d="{icon_path(name)}" fill="{color}" transform="translate({x:.1f} {y:.1f}) scale({k:.4f})"/>'
+
+
+def hand_underline(x, baseline, w, color, stroke=5):
+    """El subrayado a mano del hero de quobit.es (M3 13c38-7 92-10 140-6 22 2 38 4 54 7), a escala."""
+    k = w / 194
+    y = baseline + 12
+    return (f'<path d="M{x:.1f} {y:.1f} c{38 * k:.1f} -7 {92 * k:.1f} -10 {140 * k:.1f} -6 '
+            f'{22 * k:.1f} 2 {38 * k:.1f} 4 {54 * k:.1f} 7" fill="none" stroke="{color}" '
+            f'stroke-width="{stroke}" stroke-linecap="round"/>')
+
+
+def svg_doc(w, h, title, desc, css, body, defs=""):
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
+            f'role="img" aria-labelledby="t d">\n<title id="t">{esc(title)}</title>\n<desc id="d">{esc(desc)}</desc>\n'
+            f'<defs><style>{css}</style>{defs}</defs>\n{body}\n</svg>\n')
+
+
+# ---------------------------------------------------------------- hero
+
+def hero():
+    W, H, x0 = 1200, 500, 72
+    kicker = "Full-stack developer en Sevilla"
+    l1, l2a, l2b = "Mauro Serrano,", "cofundador de ", "Quobit."
+    lede = "Cojo ideas a medio cocer y las convierto en algo que alguien abre cada mañana."
+    size = 64
+    # el titular no debe invadir el logo
+    size = min(size, 600 / (text_width("OutfitSemi", l2a + l2b, 1)))
+    lede_lines = wrap("Geist", lede, 21, 520)
+
+    ux = x0 + text_width("OutfitSemi", l2a, size)
+    uw = text_width("OutfitSemi", l2b[:-1], size)
+    b1, b2 = 240, 240 + size * 1.08
+    ly = b2 + 66
+
+    css = font_css({"OutfitSemi": l1 + l2a + l2b, "GeistMedium": kicker, "Geist": lede})
+    defs = (f'<radialGradient id="halo" cx="925" cy="245" r="400" gradientUnits="userSpaceOnUse">'
+            f'<stop offset="0" stop-color="{T["accent"]}" stop-opacity="0.30"/>'
+            f'<stop offset="0.72" stop-color="{T["accent"]}" stop-opacity="0"/></radialGradient>'
+            f'<linearGradient id="bgfade" x1="0" y1="0" x2="0" y2="1">'
+            f'<stop offset="0" stop-color="#081027"/><stop offset="0.85" stop-color="{T["bg"]}"/></linearGradient>'
+            f'<clipPath id="frame"><rect width="{W}" height="{H}" rx="20"/></clipPath>')
+    body = f'''<g clip-path="url(#frame)">
+<rect width="{W}" height="{H}" fill="url(#bgfade)"/>
+<rect width="{W}" height="{H}" fill="url(#halo)"/>
+<path d="{word_path()}" fill="{T["word"]}" transform="translate({x0 - 3} 46) scale(0.19)"/>
+{icon("map-pin", x0, 138, 22, T["ink"])}
+<text x="{x0 + 30}" y="156" font-family="{F_MED}" font-size="19" fill="{T["muted"]}">{esc(kicker)}</text>
+<text font-family="{F_TITLE}" font-size="{size:.1f}" letter-spacing="-0.5" fill="{T["fg"]}">
+  <tspan x="{x0 - 3}" y="{b1}">{esc(l1)}</tspan>
+  <tspan x="{x0 - 3}" y="{b2:.1f}">{esc(l2a + l2b)}</tspan>
+</text>
+{hand_underline(ux - 3, b2, uw + 6, T["accent"])}
+<text font-family="{F_BODY}" font-size="21" fill="{T["muted"]}">{"".join(f'<tspan x="{x0}" y="{ly + i * 31:.1f}">{esc(l)}</tspan>' for i, l in enumerate(lede_lines))}</text>
+<image href="{b64(ASSETS / "brand" / "q-3d.webp", "image/webp")}" x="705" y="25" width="450" height="450"/>
+</g>'''
+    desc = f"{kicker}. {l1} {l2a}{l2b} {lede} A la derecha, el logotipo 3D de Quobit."
+    (OUT / "hero.svg").write_text(svg_doc(W, H, f"{l1} {l2a}{l2b}", desc, css, body, defs), encoding="utf-8")
+
+
+# ---------------------------------------------------------------- fichas de proyecto
+
+PROJECTS = {
+    "trainpicker": dict(
+        title="TrainPicker", kind="Bot de Telegram", status="En producción",
+        desc="Vigila trenes completos de Renfe y Ouigo cada pocos segundos y te escribe en cuanto "
+             "alguien anula su billete, con un botón que abre la compra ya rellenada.",
+        stack="Python · API de Telegram · Docker", host="trainpicker.quobit.es",
+        sticker="gratis, pruébalo"),
+    "cardeo": dict(
+        title="Cardeo", kind="Juego multijugador", status="En producción",
+        desc="Cartas online para jugar con la peña que tienes delante: cada uno desde su móvil, "
+             "con salas en tiempo real y cinco modos de juego.",
+        stack="React · Socket.IO · Node.js", host="cardeo.quobit.es"),
+    "planabc": dict(
+        title="PlanABC", kind="App para parejas", status="En producción",
+        desc="27 planes, uno por cada letra del abecedario, en el orden que os apetezca. "
+             "Se instala en el móvil como una app.",
+        stack="Next.js · Spring Boot · PostgreSQL", host="planabc.quobit.es"),
+    "reel": dict(
+        title="reel-gallery", kind="Paquete npm", status="Publicado en npm",
+        desc="Galería mosaico que se anima con el scroll, para fotos, vídeos y Live Photos, "
+             "con un visor 3D opcional. Para React, Vue, Svelte, Angular o como Web Component.",
+        stack="TypeScript · three.js", host="Ver la demo",
+        sticker="código abierto"),
 }
 
-NAME = "Mauro Serrano"
-ROLE = "Full-stack developer, cofundador de Quobit"
-LINE1 = "Cojo ideas a medio cocer y las convierto"
-LINE2_A = "en algo que alguien abre "
-LINE2_B = "cada mañana"
-LINE2_C = "."
-CTA_A = "Escríbeme: "
-CTA_B = "info@quobit.es"
-NOTE = ["ya están funcionando,", "pruébalos"]
 
-POLAROIDS = [  # (captura, pie a mano, centro x, centro y, giro)
-    ("trainpicker", "TrainPicker", 800, 132, -5),
-    ("cardeo", "Cardeo", 1022, 124, 4),
-    ("planabc", "PlanABC", 858, 362, 3),
-    ("reel", "reel-gallery", 1076, 352, -3),
+def window_frame(x, y, w, shot, cid):
+    bar = 30
+    ih = w * 0.625
+    return (f'<rect x="{x}" y="{y}" width="{w}" height="{bar + ih:.1f}" rx="14" fill="{T["surface"]}" '
+            f'stroke="#ffffff" stroke-opacity="0.09"/>'
+            + "".join(f'<circle cx="{x + 18 + i * 14}" cy="{y + bar / 2}" r="4" fill="{T["dim"]}" opacity="0.55"/>' for i in range(3))
+            + f'<clipPath id="{cid}"><path d="M{x} {y + bar}H{x + w}V{y + bar + ih - 14:.1f}'
+              f'a14 14 0 0 1 -14 14H{x + 14}a14 14 0 0 1 -14 -14Z"/></clipPath>'
+              f'<image href="{b64(ASSETS / "shots" / f"{shot}.jpg", "image/jpeg")}" x="{x}" y="{y + bar}" '
+              f'width="{w}" height="{ih:.1f}" preserveAspectRatio="xMidYMid slice" clip-path="url(#{cid})"/>'), bar + ih
+
+
+def sticker(x, y, text, rot):
+    w = text_width("Caveat", text, 26) + 28
+    return (f'<g transform="rotate({rot} {x + w / 2:.1f} {y + 19})"><rect x="{x}" y="{y}" width="{w:.1f}" height="38" rx="6" '
+            f'fill="{T["surface2"]}" stroke="{T["pale"]}" stroke-opacity="0.55"/>'
+            f'<text x="{x + w / 2:.1f}" y="{y + 27}" text-anchor="middle" font-family="{F_HAND}" font-size="26" fill="{T["pale"]}">{esc(text)}</text></g>'), w
+
+
+def text_block(p, x, y, maxw, title_size, desc_size, lh):
+    """Línea de estado, título, descripción, stack y destino. Devuelve (svg, alto, textos)."""
+    parts, used = [], {"Geist": "", "GeistMedium": "", "OutfitSemi": ""}
+    # estado: tipo · ● estado
+    kind_w = text_width("Geist", p["kind"], 16)
+    parts.append(f'<text x="{x}" y="{y}" font-family="{F_BODY}" font-size="16" fill="{T["muted"]}">{esc(p["kind"])}</text>'
+                 f'<circle cx="{x + kind_w + 18:.1f}" cy="{y - 5.5}" r="4" fill="{T["ok"]}"/>'
+                 f'<text x="{x + kind_w + 28:.1f}" y="{y}" font-family="{F_BODY}" font-size="16" fill="{T["muted"]}">{esc(p["status"])}</text>')
+    used["Geist"] += p["kind"] + p["status"]
+    ty = y + title_size + 14
+    parts.append(f'<text x="{x - 1}" y="{ty}" font-family="{F_TITLE}" font-size="{title_size}" letter-spacing="-0.3" fill="{T["fg"]}">{esc(p["title"])}</text>')
+    used["OutfitSemi"] += p["title"]
+    lines = wrap("Geist", p["desc"], desc_size, maxw)
+    dy = ty + desc_size + 18
+    parts.append(f'<text font-family="{F_BODY}" font-size="{desc_size}" fill="{T["muted"]}">'
+                 + "".join(f'<tspan x="{x}" y="{dy + i * lh}">{esc(l)}</tspan>' for i, l in enumerate(lines)) + "</text>")
+    used["Geist"] += p["desc"]
+    sy = dy + (len(lines) - 1) * lh + 34
+    parts.append(f'<text x="{x}" y="{sy}" font-family="{F_BODY}" font-size="16" fill="{T["dim"]}">{esc(p["stack"])}</text>')
+    used["Geist"] += p["stack"]
+    hy = sy + 40
+    parts.append(f'<text x="{x}" y="{hy}" font-family="{F_MED}" font-size="18" fill="{T["ink"]}">{esc(p["host"])}</text>'
+                 + icon("arrow-right", x + text_width("GeistMedium", p["host"], 18) + 8, hy - 15, 18, T["ink"]))
+    used["GeistMedium"] += p["host"]
+    return "".join(parts), hy - y, used
+
+
+def merge(a, b):
+    return {k: a.get(k, "") + b.get(k, "") for k in set(a) | set(b)}
+
+
+def card_wide(slug, mirrored=False):
+    p = PROJECTS[slug]
+    W, pad, fw = 1200, 28, 660
+    fx = W - pad - fw if mirrored else pad
+    frame, fh = window_frame(fx, pad, fw, slug, "shot")
+    H = int(pad * 2 + fh)
+    tx = 40 if mirrored else fx + fw + 40
+    maxw = (fx - 40 - 40) if mirrored else (W - tx - 40)
+    # el bloque de texto, centrado en vertical junto a la captura
+    probe, th, used = text_block(p, tx, 0, maxw, 46, 20, 30)
+    ty = (H - th) / 2 + 6
+    block, th, used = text_block(p, tx, ty, maxw, 46, 20, 30)
+    extra = ""
+    if p.get("sticker"):
+        s, sw = sticker(0, 0, p["sticker"], 0)
+        sx = fx + fw - sw - 18 if not mirrored else fx + 18
+        extra, _ = sticker(sx, pad - 12, p["sticker"], -4 if not mirrored else 3)
+        used["Caveat"] = p["sticker"]
+    body = (f'<rect width="{W}" height="{H}" rx="20" fill="{T["bg"]}"/>' + frame + block + extra)
+    desc = f'{p["title"]}. {p["kind"]}, {p["status"].lower()}. {p["desc"]} {p["stack"]}.'
+    (OUT / f"card-{slug}.svg").write_text(svg_doc(W, H, p["title"], desc, font_css(used), body), encoding="utf-8")
+
+
+def card_half_pair(a, b):
+    W, pad = 590, 22
+    fw = W - 2 * pad
+    blocks = {}
+    for slug in (a, b):
+        _, th, _ = text_block(PROJECTS[slug], pad, 0, fw - 4, 34, 18, 27)
+        blocks[slug] = th
+    th_max = max(blocks.values())
+    for slug in (a, b):
+        p = PROJECTS[slug]
+        frame, fh = window_frame(pad, pad, fw, slug, "shot")
+        ty = pad + fh + 42
+        block, th, used = text_block(p, pad + 2, ty, fw - 4, 34, 18, 27)
+        H = int(ty + th_max + pad + 4)
+        body = f'<rect width="{W}" height="{H}" rx="20" fill="{T["bg"]}"/>' + frame + block
+        desc = f'{p["title"]}. {p["kind"]}, {p["status"].lower()}. {p["desc"]} {p["stack"]}.'
+        (OUT / f"card-{slug}.svg").write_text(svg_doc(W, H, p["title"], desc, font_css(used), body), encoding="utf-8")
+
+
+# ---------------------------------------------------------------- botones
+
+BUTTONS = [  # (fichero, texto, icono, primario)
+    ("btn-proyecto", "Cuéntame tu proyecto", "arrow-right", True),
+    ("btn-linkedin", "LinkedIn", "linkedin-logo", False),
+    ("btn-x", "@mauroserranoo_", "x-logo", False),
+    ("btn-telegram", "Prueba TrainPicker", "telegram-logo", False),
 ]
-PW, PH, PAD, PHOTO_H = 184, 218, 9, 156
-
-# Logotipo de Quobit (public/marca/quobit-word.svg del repo quobit), viewBox 460×160.
-QUOBIT_WORD = ("M49.5 121Q39.3 121 31.2 115.9Q23.1 110.8 18.4 102Q13.7 93.3 13.7 82.3Q13.7 71.1 18.4 62.4Q23.1 53.6 31.2 48.4Q39.3 43.3 49.5 43.3Q57.6 43.3 63.9 46.6Q70.2 49.9 74.1 55.6Q77.9 61.4 78.2 68.7V95.6Q77.9 102.9 74.1 108.7Q70.3 114.4 64 117.7Q57.6 121 49.5 121ZM53.3 102.3Q61.8 102.3 67 96.7Q72.2 91 72.2 82.2Q72.2 76.2 69.9 71.7Q67.5 67.1 63.3 64.6Q59 62 53.3 62Q47.8 62 43.5 64.6Q39.3 67.1 36.8 71.7Q34.4 76.2 34.4 82.2Q34.4 88.1 36.8 92.6Q39.3 97.2 43.5 99.7Q47.8 102.3 53.3 102.3ZM71.2 148V100.7L74.4 82.6L71.2 64.5V44.8H91.3V148ZM139.1 121Q131.2 121 123.6 117.4Q115.9 113.7 110.8 106.5Q105.7 99.2 105.7 88.3V45H125.2V87.6Q125.2 94.3 129.1 98.7Q133.1 103.1 139.1 103.1Q147 103.1 151.4 98.6Q155.8 94.1 155.8 87.6V45H175.3V119.5H155.8V112.3Q153.8 116.7 149.2 118.8Q144.7 121 139.1 121ZM226 121.1Q214.7 121.1 205.7 115.9Q196.6 110.7 191.3 101.8Q186 93 186 82Q186 71 191.3 62.3Q196.6 53.6 205.6 48.4Q214.7 43.2 225.9 43.2Q237.3 43.2 246.3 48.3Q255.4 53.5 260.7 62.2Q266 71 266 82Q266 93 260.7 101.8Q255.4 110.7 246.4 115.9Q237.3 121.1 226 121.1ZM225.9 102.2Q231.7 102.2 236 99.6Q240.4 97.1 242.8 92.5Q245.2 87.9 245.2 82Q245.2 76.2 242.7 71.7Q240.2 67.2 235.9 64.7Q231.7 62.1 225.9 62.1Q220.4 62.1 216 64.7Q211.7 67.3 209.2 71.7Q206.8 76.2 206.8 82.1Q206.8 87.9 209.2 92.5Q211.7 97.1 216 99.6Q220.4 102.2 225.9 102.2ZM318.7 121Q310.6 121 304.1 117.6Q297.6 114.2 293.7 108.4Q289.9 102.5 289.5 95.2V68.7Q289.9 61.4 293.8 55.6Q297.7 49.9 304.2 46.6Q310.7 43.3 318.7 43.3Q329 43.3 337.2 48.4Q345.4 53.6 350.1 62.4Q354.8 71.1 354.8 82.3Q354.8 93.3 350.1 102Q345.4 110.8 337.2 115.9Q329 121 318.7 121ZM277.2 119.5V14.9H297.5V63.2L294.1 81.2L297.3 99.4V119.5ZM315.2 102.3Q320.8 102.3 325 99.7Q329.2 97.2 331.7 92.6Q334.1 88.1 334.1 82.2Q334.1 76.2 331.7 71.7Q329.2 67.1 325 64.6Q320.7 62 315.2 62Q309.6 62 305.3 64.6Q301 67.1 298.6 71.7Q296.3 76.2 296.3 82.2Q296.3 88.1 298.6 92.7Q301 97.2 305.3 99.8Q309.6 102.3 315.2 102.3ZM366.8 119.5V44.8H387.2V119.5ZM377 32.9Q372.1 32.9 368.9 29.5Q365.6 26.2 365.6 21.3Q365.6 16.4 368.9 13Q372.1 9.7 377 9.7Q382.1 9.7 385.2 13Q388.4 16.4 388.4 21.3Q388.4 26.2 385.2 29.5Q382.1 32.9 377 32.9ZM408.9 29.9 429 24.9V45.9H447V62.9H429V97.1Q429 101.4 433.6 101.4H447V119.5H427.6Q419.1 119.5 414 113.8Q408.9 108.2 408.9 97.8V62.9H397V45.9H408.9Z")
 
 
-def photo_b64(name: str) -> str:
-    return base64.b64encode((SHOTS / f"{name}.jpg").read_bytes()).decode()
+def button(fname, label, ic, primary):
+    """Botones de quobit.es (Button.module.css): píldora, Geist 500, primario azul con flecha
+    a la derecha; secundarios en azul marino con borde fino y el icono de la red delante."""
+    h, padx, fs, isz, gap = 48, 22, 17, 20, 10
+    tw = text_width("GeistMedium", label, fs)
+    w = padx * 2 + tw + gap + isz
+    bg, fg, ic_col = (T["accent"], "#ffffff", "#ffffff") if primary else (T["surface"], T["fg"], T["ink"])
+    ring = "" if primary else ' stroke="#ffffff" stroke-opacity="0.16"'
+    if primary:
+        tx, ix = padx, padx + tw + gap
+    else:
+        ix, tx = padx, padx + isz + gap
+    body = (f'<rect x="0.5" y="0.5" width="{w - 1:.1f}" height="{h - 1}" rx="{(h - 1) / 2}" fill="{bg}"{ring}/>'
+            f'<text x="{tx:.1f}" y="{h / 2 + fs * 0.35:.1f}" font-family="{F_MED}" font-size="{fs}" fill="{fg}">{esc(label)}</text>'
+            + icon(ic, ix, (h - isz) / 2, isz, ic_col))
+    (OUT / f"{fname}.svg").write_text(svg_doc(round(w), h, label, label, font_css({"GeistMedium": label}), body), encoding="utf-8")
 
 
-def polaroid(i, shot, caption, cx, cy, rot, t, hand):
-    x, y = cx - PW / 2, cy - PH / 2
-    pw = PW - 2 * PAD
-    return f'''
-  <g transform="rotate({rot} {cx} {cy})" filter="url(#lift)">
-    <rect x="{x}" y="{y}" width="{PW}" height="{PH}" rx="3" fill="{t["paper"]}"/>
-    <clipPath id="ph{i}"><rect x="{x + PAD}" y="{y + PAD}" width="{pw}" height="{PHOTO_H}" rx="1.5"/></clipPath>
-    <image href="data:image/jpeg;base64,{photo_b64(shot)}" x="{x + PAD}" y="{y + PAD}" width="{pw}" height="{PHOTO_H}" preserveAspectRatio="xMidYMid slice" clip-path="url(#ph{i})"/>
-    <text x="{cx}" y="{y + PH - 17}" text-anchor="middle" font-family="{hand}" font-size="29" fill="{t["paper_ink"]}">{esc(caption)}</text>
-  </g>'''
-
-
-def hero(name: str, t: dict) -> None:
-    W, H = 1200, 490
-    outfit, geist, geistm, hand = (family("Outfit", SANS_FB), family("Geist", SANS_FB),
-                                   family("GeistMedium", SANS_FB), family("Caveat", HAND_FB))
-    x0 = 72
-
-    # medidas reales para el subrayado a mano
-    s_line = 23
-    ux0 = x0 + text_width("Geist", LINE2_A, s_line)
-    ux1 = ux0 + text_width("GeistMedium", LINE2_B, s_line)
-    uy = 332
-
-    css = font_css({
-        "Outfit": NAME,
-        "Geist": ROLE + LINE1 + LINE2_A + LINE2_C + CTA_A + CTA_B,
-        "GeistMedium": LINE2_B,
-        "Caveat": "".join(NOTE) + "".join(p[1] for p in POLAROIDS),
-    })
-
-    pols = "".join(polaroid(i, *p, t, hand) for i, p in enumerate(POLAROIDS))
-
-    # nota a mano con flecha hacia las polaroids
-    nx, ny = 486, 428
-    note = (f'<g transform="rotate(-4 {nx} {ny})" font-family="{hand}" font-size="30" fill="{t["hand"]}">'
-            f'<text x="{nx}" y="{ny}">{esc(NOTE[0])}</text><text x="{nx + 34}" y="{ny + 30}">{esc(NOTE[1])}</text></g>')
-    arrow = (f'<path d="M654 436 C 692 430, 724 414, 748 388" fill="none" stroke="{t["hand"]}" stroke-width="2.6" stroke-linecap="round"/>'
-             f'<path d="M734 389 L 749 386 L 747 402" fill="none" stroke="{t["hand"]}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>')
-    underline = (f'<path d="M{ux0 - 3:.1f} {uy + 10} C {ux0 + (ux1 - ux0) * 0.3:.1f} {uy + 5}, {ux0 + (ux1 - ux0) * 0.7:.1f} {uy + 4}, {ux1 + 4:.1f} {uy + 8}" '
-                 f'fill="none" stroke="{t["hand"]}" stroke-width="3.4" stroke-linecap="round"/>')
-
-    alt = (f"{NAME}. {ROLE}. {LINE1} {LINE2_A}{LINE2_B}. Polaroids con capturas de TrainPicker, Cardeo, "
-           f"PlanABC y reel-gallery, con la nota a mano: {' '.join(NOTE)}.")
-    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="t d">
-<title id="t">{esc(NAME)}, {esc(ROLE)}</title>
-<desc id="d">{esc(alt)}</desc>
-<defs>
-  <style>{css}</style>
-  <filter id="lift" x="-20%" y="-20%" width="140%" height="150%">
-    <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="{t["shadow"]}" flood-opacity="{t["shadow_op"]}"/>
-  </filter>
-  <clipPath id="frame"><rect width="{W}" height="{H}" rx="20"/></clipPath>
-</defs>
-<g clip-path="url(#frame)">
-  <rect width="{W}" height="{H}" fill="{t["bg"]}"/>
-  <path d="{QUOBIT_WORD}" fill="{t["word"]}" transform="translate({x0 - 4} 64) scale(0.2)"/>
-  <text x="{x0 - 3}" y="174" font-family="{outfit}" font-size="76" letter-spacing="-1.5" fill="{t["fg"]}">{esc(NAME)}</text>
-  <text x="{x0}" y="224" font-family="{geist}" font-size="25" fill="{t["fg"]}">{esc(ROLE)}</text>
-  <text font-family="{geist}" font-size="{s_line}" fill="{t["muted"]}">
-    <tspan x="{x0}" y="298">{esc(LINE1)}</tspan>
-    <tspan x="{x0}" y="{uy}">{esc(LINE2_A)}<tspan font-family="{geistm}" fill="{t["fg"]}">{esc(LINE2_B)}</tspan>{esc(LINE2_C)}</tspan>
-  </text>
-  {underline}
-  <text x="{x0}" y="394" font-family="{geist}" font-size="21" fill="{t["muted"]}">{esc(CTA_A)}<tspan fill="{t["ink"]}">{esc(CTA_B)}</tspan></text>
-  {pols}
-  {note}
-  {arrow}
-</g>
-</svg>
-'''
-    (OUT / f"hero-{name}.svg").write_text(svg, encoding="utf-8")
-
-
-def main() -> None:
-    informe = []
-    for name, t in THEMES.items():
-        informe += check_contrast([
-            (f"{name} nombre", t["fg"], t["bg"], True),
-            (f"{name} texto", t["muted"], t["bg"], False),
-            (f"{name} correo", t["ink"], t["bg"], False),
-            (f"{name} nota a mano (30 px)", t["hand"], t["bg"], True),
-            (f"{name} pie de polaroid", t["paper_ink"], t["paper"], True),
-        ])
-        hero(name, t)
-    print("\n".join(informe))
+def main():
+    print("\n".join(check_contrast([
+        ("titular", T["fg"], T["bg"], True),
+        ("texto secundario", T["muted"], T["bg"], False),
+        ("stack de cada ficha (16 px)", T["dim"], T["bg"], False),
+        ("enlace de cada ficha", T["ink"], T["bg"], False),
+        ("botón principal", "#ffffff", T["accent"], False),
+        ("botones secundarios", T["fg"], T["surface"], False),
+        ("etiqueta a mano", T["pale"], T["surface2"], True),
+    ])))
+    hero()
+    card_wide("trainpicker")
+    card_half_pair("cardeo", "planabc")
+    card_wide("reel", mirrored=True)
+    for b in BUTTONS:
+        button(*b)
     print("ok ->", OUT)
 
 

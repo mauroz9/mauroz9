@@ -29,6 +29,7 @@ FACES = {
     "Outfit": ("outfit-latin.woff2", 700),
     "Geist": ("geist-latin.woff2", 400),
     "GeistMedium": ("geist-latin.woff2", 500),
+    "OutfitSemi": ("outfit-latin.woff2", 600),
     "Caveat": ("caveat-latin.woff2", 600),
 }
 
@@ -114,3 +115,25 @@ def check_contrast(pairs: list[tuple[str, str, str, bool]]) -> list[str]:
 
 def esc(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def wrap(face: str, text: str, size: float, max_w: float) -> list[str]:
+    """Corta el texto en líneas que caben en max_w con las métricas reales de la fuente."""
+    lines, cur = [], ""
+    for word in text.split():
+        test = f"{cur} {word}".strip()
+        if cur and text_width(face, test, size) > max_w:
+            lines.append(cur)
+            cur = word
+        else:
+            cur = test
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def icon_path(name: str) -> str:
+    """Trazado de un icono Phosphor (assets/icons, MIT), viewBox 256×256."""
+    import re
+    svg = (ROOT / "assets" / "icons" / f"{name}.svg").read_text()
+    return " ".join(re.findall(r'<path[^>]* d="([^"]+)"', svg))
