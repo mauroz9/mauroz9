@@ -1,295 +1,162 @@
 #!/usr/bin/env python3
-"""Genera el hero y las tarjetas de proyecto del perfil de GitHub (versión oscura y clara).
+"""Genera el hero del perfil de GitHub (versión oscura y clara) en profile/.
 
-Uso: python3 scripts/build.py   → escribe los SVG en profile/
-Solo librería estándar. Colores tomados de los tokens de Quobit (styles/tokens.css).
+Uso: python3 scripts/build.py      (requiere fonttools y brotli)
+
+Dirección de diseño: la marca Quobit (styles/tokens.css del repo quobit).
+Lectura: cabecera de perfil para posibles clientes y desarrolladores, en el lenguaje
+visual de Quobit; ENERGY 2 / RHYTHM 2 / MOTION 1 (imagen estática).
+
+Decisiones y su porqué (anti-slop R-31):
+- Fondo azul marino liso #070d20: es el fondo de quobit.es; liso, porque la profundidad
+  la dan las polaroids, no un degradado ni una rejilla.
+- Polaroids con nombre a mano: motivo propio de Quobit (sección Equipo de quobit.es).
+  Aquí enseñan capturas reales de los productos, no maquetas.
+- Sombra solo en las polaroids: son papel sobre una mesa; es la única elevación.
+- Ámbar a mano (#f2d58a, «hand» en tokens.css): el único acento. Subraya la frase clave
+  y escribe la nota sobre los productos.
+- Outfit para el nombre, Geist para el texto y Caveat para lo escrito a mano: las tres
+  tipografías de quobit.es.
+- Estático: una imagen de perfil se mira en dos segundos; el movimiento no aportaba nada.
 """
-from pathlib import Path
-from html import escape
+from __future__ import annotations
 
-OUT = Path(__file__).resolve().parent.parent / "profile"
+import base64
+
+from svgkit import ROOT, check_contrast, esc, family, font_css, text_width
+
+OUT = ROOT / "profile"
+SHOTS = ROOT / "assets" / "shots"
 OUT.mkdir(exist_ok=True)
+
+SANS_FB = "'Helvetica Neue', Helvetica, Arial, sans-serif"
+HAND_FB = "'Bradley Hand', 'Segoe Print', cursive"
 
 THEMES = {
     "dark": dict(
-        bg="#070d20", bg2="#0c1530", fg="#eceff7", muted="#a3adc6", dim="#7c88a8",
-        accent="#2f5bea", ink="#8fb0ff", cyan="#3cc6f5", hand="#f2d58a", ok="#5dd3a0",
-        line="#ffffff", line_op="0.07", chip="#111c3d", chip_line="#ffffff", chip_op="0.10",
-        glow_op="0.55", term="#0a1229", term_line="#ffffff", term_op="0.10",
+        bg="#070d20", fg="#eceff7", muted="#a3adc6", ink="#8fb0ff", hand="#f2d58a",
+        word="#cde8fe", paper="#e8ebf2", paper_ink="#1c2a55", shadow="#000000", shadow_op=0.55,
     ),
     "light": dict(
-        bg="#f5f7fc", bg2="#ffffff", fg="#0b1430", muted="#45507a", dim="#6b7596",
-        accent="#2f5bea", ink="#2f5bea", cyan="#0f9fd6", hand="#d9a21b", ok="#1f9d6b",
-        line="#0b1430", line_op="0.06", chip="#ffffff", chip_line="#0b1430", chip_op="0.12",
-        glow_op="0.22", term="#0a1229", term_line="#0b1430", term_op="0.0",
+        bg="#f1f3f8", fg="#0b1430", muted="#45507a", ink="#1f45c4", hand="#9a6b00",
+        word="#1c2a55", paper="#ffffff", paper_ink="#1c2a55", shadow="#1c2a55", shadow_op=0.22,
     ),
 }
 
-SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif"
-MONO = "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace"
-CH = 0.602  # ancho medio de carácter monoespaciado (em)
+NAME = "Mauro Serrano"
+ROLE = "Full-stack developer, cofundador de Quobit"
+LINE1 = "Cojo ideas a medio cocer y las convierto"
+LINE2_A = "en algo que alguien abre "
+LINE2_B = "cada mañana"
+LINE2_C = "."
+CTA_A = "Escríbeme: "
+CTA_B = "info@quobit.es"
+NOTE = ["ya están funcionando,", "pruébalos"]
 
-REDUCED = "@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }"
+POLAROIDS = [  # (captura, pie a mano, centro x, centro y, giro)
+    ("trainpicker", "TrainPicker", 800, 132, -5),
+    ("cardeo", "Cardeo", 1022, 124, 4),
+    ("planabc", "PlanABC", 858, 362, 3),
+    ("reel", "reel-gallery", 1076, 352, -3),
+]
+PW, PH, PAD, PHOTO_H = 184, 218, 9, 156
 
-
-def chips(items, x, y, t, size=14, gap=10, padx=12, h=30):
-    out, cx = [], x
-    for it in items:
-        w = len(it) * size * CH + padx * 2
-        out.append(
-            f'<g class="fade" style="animation-delay:{0.9 + 0.08 * len(out):.2f}s">'
-            f'<rect x="{cx:.1f}" y="{y}" width="{w:.1f}" height="{h}" rx="{h/2}" fill="{t["chip"]}" '
-            f'stroke="{t["chip_line"]}" stroke-opacity="{t["chip_op"]}"/>'
-            f'<text x="{cx + w/2:.1f}" y="{y + h/2 + size*0.36:.1f}" text-anchor="middle" '
-            f'font-family="{MONO}" font-size="{size}" fill="{t["muted"]}">{escape(it)}</text></g>'
-        )
-        cx += w + gap
-    return "".join(out)
-
-
-def terminal(t, x, y, w, h):
-    """Tarjeta tipo terminal con líneas que se 'escriben' en secuencia."""
-    size, lh, padx = 15, 25, 22
-    lines = [
-        ("cmd", "whoami"),
-        ("out", [("mauro", "#eceff7"), (" · full-stack @ ", "#a3adc6"), ("quobit.es", "#8fb0ff")]),
-        ("cmd", "ls proyectos/"),
-        ("out", [("trainpicker/  cardeo/  planabc/  reel-gallery/", "#3cc6f5")]),
-        ("cmd", "cat trainpicker/README"),
-        ("out", [("Avisa cuando se libera plaza en un", "#a3adc6")]),
-        ("out", [("AVE completo. En producción, gratis.", "#a3adc6")]),
-        ("cmd", "./contactar --proyecto"),
-        ("out", [("✓ ", "#5dd3a0"), ("info@quobit.es", "#eceff7"), (" · respuesta en 1–2 días", "#a3adc6")]),
-    ]
-    parts = [
-        f'<g class="rise">'
-        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="16" fill="{t["term"]}" '
-        f'stroke="{t["term_line"]}" stroke-opacity="{t["term_op"] or 0}"/>'
-        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="16" fill="url(#termGlow)"/>'
-        f'<path d="M{x} {y+44}H{x+w}" stroke="#ffffff" stroke-opacity="0.07"/>'
-    ]
-    for i, c in enumerate(["#ff5f57", "#febc2e", "#28c840"]):
-        parts.append(f'<circle cx="{x + 24 + i*20}" cy="{y + 22}" r="6" fill="{c}" opacity="0.9"/>')
-    parts.append(
-        f'<text x="{x + w/2}" y="{y + 27}" text-anchor="middle" font-family="{MONO}" font-size="13" '
-        f'fill="#7c88a8">mauro@quobit — zsh</text>'
-    )
-    defs = []
-    delay = 1.2
-    ty = y + 44 + 34
-    for i, (kind, content) in enumerate(lines):
-        if kind == "cmd":
-            text = content
-            tw = (2 + len(text)) * size * CH + 4
-            dur = 0.035 * len(text) + 0.15
-            cid = f"type{i}"
-            defs.append(
-                f'<clipPath id="{cid}"><rect class="type" x="{x + padx + 2*size*CH:.1f}" y="{ty - 18}" '
-                f'width="{tw:.1f}" height="{lh}" style="animation-delay:{delay:.2f}s;animation-duration:{dur:.2f}s"/></clipPath>'
-            )
-            parts.append(
-                f'<g class="fade" style="animation-delay:{delay - 0.15:.2f}s">'
-                f'<text x="{x + padx}" y="{ty}" font-family="{MONO}" font-size="{size}" fill="#5dd3a0">❯</text></g>'
-                f'<text x="{x + padx + 2*size*CH:.1f}" y="{ty}" font-family="{MONO}" font-size="{size}" '
-                f'fill="#eceff7" clip-path="url(#{cid})">{escape(text)}</text>'
-            )
-            delay += dur + 0.25
-        else:
-            spans = "".join(f'<tspan fill="{col}">{escape(s)}</tspan>' for s, col in content)
-            parts.append(
-                f'<g class="fade" style="animation-delay:{delay:.2f}s">'
-                f'<text x="{x + padx}" y="{ty}" font-family="{MONO}" font-size="{size}">{spans}</text></g>'
-            )
-            delay += 0.18
-            # deja un respiro tras cada bloque de salida
-            if i + 1 < len(lines) and lines[i + 1][0] == "cmd":
-                delay += 0.25
-                ty += 8
-        ty += lh
-    # prompt final con cursor parpadeante
-    parts.append(
-        f'<g class="fade" style="animation-delay:{delay:.2f}s">'
-        f'<text x="{x + padx}" y="{ty + 8}" font-family="{MONO}" font-size="{size}" fill="#5dd3a0">❯</text>'
-        f'<rect class="cursor" x="{x + padx + 2*size*CH:.1f}" y="{ty + 8 - 14}" width="9" height="18" rx="1.5" fill="#8fb0ff"/></g>'
-    )
-    parts.append("</g>")
-    return "".join(defs), "".join(parts)
+# Logotipo de Quobit (public/marca/quobit-word.svg del repo quobit), viewBox 460×160.
+QUOBIT_WORD = ("M49.5 121Q39.3 121 31.2 115.9Q23.1 110.8 18.4 102Q13.7 93.3 13.7 82.3Q13.7 71.1 18.4 62.4Q23.1 53.6 31.2 48.4Q39.3 43.3 49.5 43.3Q57.6 43.3 63.9 46.6Q70.2 49.9 74.1 55.6Q77.9 61.4 78.2 68.7V95.6Q77.9 102.9 74.1 108.7Q70.3 114.4 64 117.7Q57.6 121 49.5 121ZM53.3 102.3Q61.8 102.3 67 96.7Q72.2 91 72.2 82.2Q72.2 76.2 69.9 71.7Q67.5 67.1 63.3 64.6Q59 62 53.3 62Q47.8 62 43.5 64.6Q39.3 67.1 36.8 71.7Q34.4 76.2 34.4 82.2Q34.4 88.1 36.8 92.6Q39.3 97.2 43.5 99.7Q47.8 102.3 53.3 102.3ZM71.2 148V100.7L74.4 82.6L71.2 64.5V44.8H91.3V148ZM139.1 121Q131.2 121 123.6 117.4Q115.9 113.7 110.8 106.5Q105.7 99.2 105.7 88.3V45H125.2V87.6Q125.2 94.3 129.1 98.7Q133.1 103.1 139.1 103.1Q147 103.1 151.4 98.6Q155.8 94.1 155.8 87.6V45H175.3V119.5H155.8V112.3Q153.8 116.7 149.2 118.8Q144.7 121 139.1 121ZM226 121.1Q214.7 121.1 205.7 115.9Q196.6 110.7 191.3 101.8Q186 93 186 82Q186 71 191.3 62.3Q196.6 53.6 205.6 48.4Q214.7 43.2 225.9 43.2Q237.3 43.2 246.3 48.3Q255.4 53.5 260.7 62.2Q266 71 266 82Q266 93 260.7 101.8Q255.4 110.7 246.4 115.9Q237.3 121.1 226 121.1ZM225.9 102.2Q231.7 102.2 236 99.6Q240.4 97.1 242.8 92.5Q245.2 87.9 245.2 82Q245.2 76.2 242.7 71.7Q240.2 67.2 235.9 64.7Q231.7 62.1 225.9 62.1Q220.4 62.1 216 64.7Q211.7 67.3 209.2 71.7Q206.8 76.2 206.8 82.1Q206.8 87.9 209.2 92.5Q211.7 97.1 216 99.6Q220.4 102.2 225.9 102.2ZM318.7 121Q310.6 121 304.1 117.6Q297.6 114.2 293.7 108.4Q289.9 102.5 289.5 95.2V68.7Q289.9 61.4 293.8 55.6Q297.7 49.9 304.2 46.6Q310.7 43.3 318.7 43.3Q329 43.3 337.2 48.4Q345.4 53.6 350.1 62.4Q354.8 71.1 354.8 82.3Q354.8 93.3 350.1 102Q345.4 110.8 337.2 115.9Q329 121 318.7 121ZM277.2 119.5V14.9H297.5V63.2L294.1 81.2L297.3 99.4V119.5ZM315.2 102.3Q320.8 102.3 325 99.7Q329.2 97.2 331.7 92.6Q334.1 88.1 334.1 82.2Q334.1 76.2 331.7 71.7Q329.2 67.1 325 64.6Q320.7 62 315.2 62Q309.6 62 305.3 64.6Q301 67.1 298.6 71.7Q296.3 76.2 296.3 82.2Q296.3 88.1 298.6 92.7Q301 97.2 305.3 99.8Q309.6 102.3 315.2 102.3ZM366.8 119.5V44.8H387.2V119.5ZM377 32.9Q372.1 32.9 368.9 29.5Q365.6 26.2 365.6 21.3Q365.6 16.4 368.9 13Q372.1 9.7 377 9.7Q382.1 9.7 385.2 13Q388.4 16.4 388.4 21.3Q388.4 26.2 385.2 29.5Q382.1 32.9 377 32.9ZM408.9 29.9 429 24.9V45.9H447V62.9H429V97.1Q429 101.4 433.6 101.4H447V119.5H427.6Q419.1 119.5 414 113.8Q408.9 108.2 408.9 97.8V62.9H397V45.9H408.9Z")
 
 
-def hero(name, t):
-    W, H = 1200, 440
-    tdefs, term = terminal(t, 680, 52, 468, 336)
-    hand_y = 300
-    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="title desc">
-<title id="title">Mauro Serrano — Full-stack developer, cofundador de Quobit</title>
-<desc id="desc">Desarrollador full-stack en Sevilla. Webs, apps, automatizaciones e IA aplicada. Autor de TrainPicker y reel-gallery.</desc>
+def photo_b64(name: str) -> str:
+    return base64.b64encode((SHOTS / f"{name}.jpg").read_bytes()).decode()
+
+
+def polaroid(i, shot, caption, cx, cy, rot, t, hand):
+    x, y = cx - PW / 2, cy - PH / 2
+    pw = PW - 2 * PAD
+    return f'''
+  <g transform="rotate({rot} {cx} {cy})" filter="url(#lift)">
+    <rect x="{x}" y="{y}" width="{PW}" height="{PH}" rx="3" fill="{t["paper"]}"/>
+    <clipPath id="ph{i}"><rect x="{x + PAD}" y="{y + PAD}" width="{pw}" height="{PHOTO_H}" rx="1.5"/></clipPath>
+    <image href="data:image/jpeg;base64,{photo_b64(shot)}" x="{x + PAD}" y="{y + PAD}" width="{pw}" height="{PHOTO_H}" preserveAspectRatio="xMidYMid slice" clip-path="url(#ph{i})"/>
+    <text x="{cx}" y="{y + PH - 17}" text-anchor="middle" font-family="{hand}" font-size="29" fill="{t["paper_ink"]}">{esc(caption)}</text>
+  </g>'''
+
+
+def hero(name: str, t: dict) -> None:
+    W, H = 1200, 490
+    outfit, geist, geistm, hand = (family("Outfit", SANS_FB), family("Geist", SANS_FB),
+                                   family("GeistMedium", SANS_FB), family("Caveat", HAND_FB))
+    x0 = 72
+
+    # medidas reales para el subrayado a mano
+    s_line = 23
+    ux0 = x0 + text_width("Geist", LINE2_A, s_line)
+    ux1 = ux0 + text_width("GeistMedium", LINE2_B, s_line)
+    uy = 332
+
+    css = font_css({
+        "Outfit": NAME,
+        "Geist": ROLE + LINE1 + LINE2_A + LINE2_C + CTA_A + CTA_B,
+        "GeistMedium": LINE2_B,
+        "Caveat": "".join(NOTE) + "".join(p[1] for p in POLAROIDS),
+    })
+
+    pols = "".join(polaroid(i, *p, t, hand) for i, p in enumerate(POLAROIDS))
+
+    # nota a mano con flecha hacia las polaroids
+    nx, ny = 486, 428
+    note = (f'<g transform="rotate(-4 {nx} {ny})" font-family="{hand}" font-size="30" fill="{t["hand"]}">'
+            f'<text x="{nx}" y="{ny}">{esc(NOTE[0])}</text><text x="{nx + 34}" y="{ny + 30}">{esc(NOTE[1])}</text></g>')
+    arrow = (f'<path d="M654 436 C 692 430, 724 414, 748 388" fill="none" stroke="{t["hand"]}" stroke-width="2.6" stroke-linecap="round"/>'
+             f'<path d="M734 389 L 749 386 L 747 402" fill="none" stroke="{t["hand"]}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>')
+    underline = (f'<path d="M{ux0 - 3:.1f} {uy + 10} C {ux0 + (ux1 - ux0) * 0.3:.1f} {uy + 5}, {ux0 + (ux1 - ux0) * 0.7:.1f} {uy + 4}, {ux1 + 4:.1f} {uy + 8}" '
+                 f'fill="none" stroke="{t["hand"]}" stroke-width="3.4" stroke-linecap="round"/>')
+
+    alt = (f"{NAME}. {ROLE}. {LINE1} {LINE2_A}{LINE2_B}. Polaroids con capturas de TrainPicker, Cardeo, "
+           f"PlanABC y reel-gallery, con la nota a mano: {' '.join(NOTE)}.")
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-labelledby="t d">
+<title id="t">{esc(NAME)}, {esc(ROLE)}</title>
+<desc id="d">{esc(alt)}</desc>
 <defs>
-  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-    <path d="M40 0H0V40" fill="none" stroke="{t["line"]}" stroke-opacity="{t["line_op"]}"/>
-  </pattern>
-  <radialGradient id="glowA" cx="0.5" cy="0.5" r="0.5">
-    <stop offset="0" stop-color="{t["accent"]}" stop-opacity="{t["glow_op"]}"/>
-    <stop offset="1" stop-color="{t["accent"]}" stop-opacity="0"/>
-  </radialGradient>
-  <radialGradient id="glowB" cx="0.5" cy="0.5" r="0.5">
-    <stop offset="0" stop-color="{t["cyan"]}" stop-opacity="{float(t["glow_op"]) * 0.6:.2f}"/>
-    <stop offset="1" stop-color="{t["cyan"]}" stop-opacity="0"/>
-  </radialGradient>
-  <linearGradient id="termGlow" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#2f5bea" stop-opacity="0.16"/>
-    <stop offset="0.6" stop-color="#2f5bea" stop-opacity="0"/>
-  </linearGradient>
-  <linearGradient id="fadeGrid" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0" stop-color="#fff" stop-opacity="0.9"/>
-    <stop offset="1" stop-color="#fff" stop-opacity="0.25"/>
-  </linearGradient>
-  <mask id="gridMask"><rect width="{W}" height="{H}" fill="url(#fadeGrid)"/></mask>
-  <clipPath id="frame"><rect width="{W}" height="{H}" rx="24"/></clipPath>
-  {tdefs}
+  <style>{css}</style>
+  <filter id="lift" x="-20%" y="-20%" width="140%" height="150%">
+    <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="{t["shadow"]}" flood-opacity="{t["shadow_op"]}"/>
+  </filter>
+  <clipPath id="frame"><rect width="{W}" height="{H}" rx="20"/></clipPath>
 </defs>
-<style>
-  .fade {{ animation: fade .5s ease-out both; }}
-  .rise {{ animation: rise .9s cubic-bezier(.22,1,.36,1) both; }}
-  .type {{ transform-box: fill-box; transform-origin: left center; animation-name: type; animation-timing-function: steps(18, end); animation-fill-mode: both; }}
-  .cursor {{ animation: blink 1.1s steps(1, end) infinite; }}
-  .pulse {{ transform-box: fill-box; transform-origin: center; animation: pulse 2.4s ease-out infinite; }}
-  .drift {{ animation: drift 14s ease-in-out infinite alternate; }}
-  .hand {{ stroke-dasharray: 340; stroke-dashoffset: 0; animation: draw 1s .9s cubic-bezier(.22,1,.36,1) both; }}
-  @keyframes fade {{ from {{ opacity: 0; transform: translateY(6px); }} to {{ opacity: 1; transform: none; }} }}
-  @keyframes rise {{ from {{ opacity: 0; transform: translateY(18px); }} to {{ opacity: 1; transform: none; }} }}
-  @keyframes type {{ from {{ transform: scaleX(0); }} to {{ transform: scaleX(1); }} }}
-  @keyframes blink {{ 0% {{ opacity: 1; }} 50% {{ opacity: 0; }} }}
-  @keyframes pulse {{ 0% {{ transform: scale(1); opacity: .55; }} 100% {{ transform: scale(2.6); opacity: 0; }} }}
-  @keyframes drift {{ from {{ transform: translate(0,0); }} to {{ transform: translate(-60px, 30px); }} }}
-  @keyframes draw {{ from {{ stroke-dashoffset: 340; }} to {{ stroke-dashoffset: 0; }} }}
-  {REDUCED}
-</style>
 <g clip-path="url(#frame)">
   <rect width="{W}" height="{H}" fill="{t["bg"]}"/>
-  <rect width="{W}" height="{H}" fill="url(#grid)" mask="url(#gridMask)"/>
-  <g class="drift"><ellipse cx="980" cy="60" rx="420" ry="300" fill="url(#glowA)"/></g>
-  <ellipse cx="120" cy="460" rx="380" ry="220" fill="url(#glowB)"/>
-
-  <!-- etiqueta -->
-  <g class="fade" style="animation-delay:.1s">
-    <rect x="64" y="56" width="352" height="34" rx="17" fill="{t["chip"]}" stroke="{t["chip_line"]}" stroke-opacity="{t["chip_op"]}"/>
-    <circle class="pulse" cx="86" cy="73" r="5" fill="{t["ok"]}"/>
-    <circle cx="86" cy="73" r="5" fill="{t["ok"]}"/>
-    <text x="102" y="78" font-family="{MONO}" font-size="14" fill="{t["muted"]}">Disponible para proyectos · Sevilla</text>
-  </g>
-
-  <!-- nombre y rol -->
-  <g class="fade" style="animation-delay:.2s">
-    <text x="62" y="170" font-family="{SANS}" font-size="74" font-weight="700" letter-spacing="-2" fill="{t["fg"]}">Mauro Serrano</text>
-  </g>
-  <g class="fade" style="animation-delay:.35s">
-    <text x="64" y="218" font-family="{SANS}" font-size="26" font-weight="500" fill="{t["fg"]}" fill-opacity="0.92">Full-stack developer · cofundador de <tspan fill="{t["ink"]}" font-weight="700">Quobit</tspan></text>
-  </g>
-
-  <!-- frase -->
-  <g class="fade" style="animation-delay:.5s">
-    <text font-family="{SANS}" font-size="20" fill="{t["muted"]}">
-      <tspan x="64" y="268">Cojo ideas a medio cocer y las convierto en software</tspan>
-      <tspan x="64" y="{hand_y - 4 + 2}">que alguien abre <tspan fill="{t["fg"]}" font-weight="600">cada mañana</tspan>.</tspan>
-    </text>
-  </g>
-  <path class="hand" d="M219 {hand_y + 8} C 250 {hand_y + 3}, 300 {hand_y + 2}, 340 {hand_y + 6}" fill="none" stroke="{t["hand"]}" stroke-width="3.2" stroke-linecap="round"/>
-
-  {chips(["TypeScript", "Next.js", "Python", "Java", "Flutter", "IA"], 64, 340, t)}
-
-  {term}
+  <path d="{QUOBIT_WORD}" fill="{t["word"]}" transform="translate({x0 - 4} 64) scale(0.2)"/>
+  <text x="{x0 - 3}" y="174" font-family="{outfit}" font-size="76" letter-spacing="-1.5" fill="{t["fg"]}">{esc(NAME)}</text>
+  <text x="{x0}" y="224" font-family="{geist}" font-size="25" fill="{t["fg"]}">{esc(ROLE)}</text>
+  <text font-family="{geist}" font-size="{s_line}" fill="{t["muted"]}">
+    <tspan x="{x0}" y="298">{esc(LINE1)}</tspan>
+    <tspan x="{x0}" y="{uy}">{esc(LINE2_A)}<tspan font-family="{geistm}" fill="{t["fg"]}">{esc(LINE2_B)}</tspan>{esc(LINE2_C)}</tspan>
+  </text>
+  {underline}
+  <text x="{x0}" y="394" font-family="{geist}" font-size="21" fill="{t["muted"]}">{esc(CTA_A)}<tspan fill="{t["ink"]}">{esc(CTA_B)}</tspan></text>
+  {pols}
+  {note}
+  {arrow}
 </g>
 </svg>
 '''
     (OUT / f"hero-{name}.svg").write_text(svg, encoding="utf-8")
 
 
-# ---------- tarjetas de proyecto ----------
-
-Q_PATH = ("M49.5 121Q39.3 121 31.2 115.9Q23.1 110.8 18.4 102Q13.7 93.3 13.7 82.3Q13.7 71.1 18.4 62.4Q23.1 53.6 31.2 48.4"
-          "Q39.3 43.3 49.5 43.3Q57.6 43.3 63.9 46.6Q70.2 49.9 74.1 55.6Q77.9 61.4 78.2 68.7V95.6Q77.9 102.9 74.1 108.7"
-          "Q70.3 114.4 64 117.7Q57.6 121 49.5 121ZM53.3 102.3Q61.8 102.3 67 96.7Q72.2 91 72.2 82.2Q72.2 76.2 69.9 71.7"
-          "Q67.5 67.1 63.3 64.6Q59 62 53.3 62Q47.8 62 43.5 64.6Q39.3 67.1 36.8 71.7Q34.4 76.2 34.4 82.2Q34.4 88.1 36.8 92.6"
-          "Q39.3 97.2 43.5 99.7Q47.8 102.3 53.3 102.3ZM71.2 148V100.7L74.4 82.6L71.2 64.5V44.8H91.3V148Z")
-
-
-def logo_trainpicker(x, y, s):
-    k = s / 64
-    return (f'<g transform="translate({x} {y}) scale({k})"><rect width="64" height="64" rx="14" fill="#6b1f7a"/>'
-            '<path d="M32 9 C22.6 9 15 16.6 15 26 C15 38.5 32 55 32 55 C32 55 49 38.5 49 26 C49 16.6 41.4 9 32 9 Z" fill="#fff"/>'
-            '<rect x="24" y="17" width="16" height="17" rx="5" fill="#6b1f7a"/><rect x="27" y="20" width="10" height="6" rx="1.5" fill="#fff"/>'
-            '<circle cx="28.5" cy="30" r="1.6" fill="#ffd34d"/><circle cx="35.5" cy="30" r="1.6" fill="#ffd34d"/></g>')
+def main() -> None:
+    informe = []
+    for name, t in THEMES.items():
+        informe += check_contrast([
+            (f"{name} nombre", t["fg"], t["bg"], True),
+            (f"{name} texto", t["muted"], t["bg"], False),
+            (f"{name} correo", t["ink"], t["bg"], False),
+            (f"{name} nota a mano (30 px)", t["hand"], t["bg"], True),
+            (f"{name} pie de polaroid", t["paper_ink"], t["paper"], True),
+        ])
+        hero(name, t)
+    print("\n".join(informe))
+    print("ok ->", OUT)
 
 
-def logo_reel(x, y, s):
-    k = s / 64
-    tiles = [(10, 10, 20, 26, "#3cc6f5"), (34, 10, 20, 16, "#8fb0ff"), (10, 40, 20, 14, "#cfe0ff"), (34, 30, 20, 24, "#2f5bea")]
-    r = "".join(f'<rect x="{a}" y="{b}" width="{c}" height="{d}" rx="3.5" fill="{f}"/>' for a, b, c, d, f in tiles)
-    return f'<g transform="translate({x} {y}) scale({k})"><rect width="64" height="64" rx="14" fill="#0c1530"/>{r}</g>'
-
-
-def logo_quobit(x, y, s):
-    k = s / 64
-    return (f'<g transform="translate({x} {y}) scale({k})"><rect width="64" height="64" rx="14" fill="#2f5bea"/>'
-            f'<path d="{Q_PATH}" fill="#ffffff" transform="translate(11 -16) scale(0.5)"/></g>')
-
-
-def logo_cardeo(x, y, s):
-    # favicon de cardeo.quobit.es (azulejo andaluz)
-    k = s / 52
-    return (f'<g transform="translate({x} {y}) scale({k})"><rect width="52" height="52" rx="12" fill="#1B4B7A"/>'
-            '<polygon points="26,7 31,17 42,14 38,25 48,26 38,27 42,38 31,35 26,45 21,35 10,38 14,27 4,26 14,25 10,14 21,17" fill="#F7F2E9"/>'
-            '<circle cx="26" cy="26" r="5" fill="#B44F27"/></g>')
-
-
-def logo_planabc(x, y, s):
-    # fichas A (hecha), B (libre), C (planeada) del logotipo de PlanABC
-    k = s / 64
-    f = f"font-family=\"{SANS}\" font-size=\"15\" font-weight=\"900\" text-anchor=\"middle\""
-    return (f'<g transform="translate({x} {y}) scale({k})"><rect width="64" height="64" rx="14" fill="#172030"/>'
-            f'<rect x="2.5" y="21.5" width="19" height="19" rx="4.5" fill="#2fd38f"/><text x="12" y="36.5" {f} fill="#0b3d2b">A</text>'
-            f'<g transform="rotate(-6 32 31)"><rect x="23.3" y="22.3" width="17.4" height="17.4" rx="4" fill="#172030" stroke="#fff" stroke-width="1.6"/>'
-            f'<text x="32" y="36.5" {f} fill="#fff">B</text></g>'
-            f'<g transform="rotate(6 52 31)"><rect x="42.5" y="21.5" width="19" height="19" rx="4.5" fill="#4c7bff"/><text x="52" y="36.5" {f} fill="#fff">C</text></g></g>')
-
-
-PROJECTS = [
-    dict(slug="trainpicker", logo=logo_trainpicker, title="TrainPicker", kicker="Bot de Telegram · en producción",
-         desc=["Vigila trenes completos de Renfe y Ouigo y te avisa", "en cuanto se libera una plaza, con la compra rellenada."],
-         tags=["Python", "Telegram", "Docker"], link="trainpicker.quobit.es"),
-    dict(slug="cardeo", logo=logo_cardeo, title="Cardeo", kicker="Juego multijugador · en producción",
-         desc=["Cartas online para jugar con la peña que tienes delante:", "salas en tiempo real y cinco modos de juego."],
-         tags=["React", "Socket.IO", "Node.js"], link="cardeo.quobit.es"),
-    dict(slug="planabc", logo=logo_planabc, title="PlanABC", kicker="App para parejas (PWA) · en producción",
-         desc=["27 planes en pareja, uno por cada letra del abecedario,", "en el orden que os apetezca."],
-         tags=["Next.js", "Spring Boot", "PostgreSQL"], link="planabc.quobit.es"),
-    dict(slug="reel-gallery", logo=logo_reel, title="reel-gallery", kicker="Paquete npm · open source",
-         desc=["Galería mosaico animada con scroll para fotos, vídeos", "y Live Photos, con visor 3D opcional."],
-         tags=["TypeScript", "three.js", "React · Vue"], link="ver demo"),
-]
-
-
-def card(p, name, t):
-    W, H = 480, 218
-    tags = chips(p["tags"], 24, 170, t, size=12, gap=8, padx=10, h=24).replace('class="fade"', 'class="x"')
-    desc = "".join(f'<tspan x="24" y="{124 + i*22}">{escape(l)}</tspan>' for i, l in enumerate(p["desc"]))
-    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-label="{escape(p["title"])}: {escape(" ".join(p["desc"]))}">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{t["accent"]}" stop-opacity="{0.14 if name == "dark" else 0.06}"/><stop offset=".55" stop-color="{t["accent"]}" stop-opacity="0"/></linearGradient></defs>
-<rect x=".5" y=".5" width="{W-1}" height="{H-1}" rx="18" fill="{t["bg2"] if name == "light" else t["bg"]}" stroke="{t["chip_line"]}" stroke-opacity="{t["chip_op"]}"/>
-<rect x=".5" y=".5" width="{W-1}" height="{H-1}" rx="18" fill="url(#g)"/>
-{p["logo"](24, 24, 48)}
-<text x="86" y="45" font-family="{SANS}" font-size="21" font-weight="700" fill="{t["fg"]}">{escape(p["title"])}</text>
-<text x="86" y="66" font-family="{MONO}" font-size="12" fill="{t["dim"]}">{escape(p["kicker"])}</text>
-<text font-family="{SANS}" font-size="15" fill="{t["muted"]}">{desc}</text>
-{tags}
-<text x="{W-24}" y="187" text-anchor="end" font-family="{MONO}" font-size="12" fill="{t["ink"]}">{escape(p["link"])} ↗</text>
-</svg>
-'''
-    (OUT / f"card-{p['slug']}-{name}.svg").write_text(svg, encoding="utf-8")
-
-
-for name, t in THEMES.items():
-    hero(name, t)
-    for p in PROJECTS:
-        card(p, name, t)
-print("ok →", OUT)
+if __name__ == "__main__":
+    main()

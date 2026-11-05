@@ -1,0 +1,34 @@
+name: Actualizar actividad del perfil
+
+on:
+  schedule:
+    - cron: "15 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  actividad:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Preparar Python
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet -r scripts/requirements.txt
+
+      # GH_STATS_TOKEN: token del propio usuario, para contar también los repos privados.
+      # Si la API falla, el script termina con error y deja la tarjeta anterior.
+      - name: Generar tarjeta de actividad
+        env:
+          GH_TOKEN: ${{ secrets.GH_STATS_TOKEN }}
+        run: .venv/bin/python scripts/activity.py ${{ github.repository_owner }}
+
+      - name: Guardar cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add profile/activity-*.svg
+          git commit -m "Actualizar tarjeta de actividad" || exit 0
+          git push

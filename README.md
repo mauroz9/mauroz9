@@ -2,60 +2,38 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./profile/hero-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="./profile/hero-light.svg">
-    <img alt="Mauro Serrano — Full-stack developer y cofundador de Quobit. Disponible para proyectos en Sevilla." src="./profile/hero-dark.svg" width="100%">
+    <img alt="Mauro Serrano, full-stack developer y cofundador de Quobit. Polaroids con capturas de TrainPicker, Cardeo, PlanABC y reel-gallery." src="./profile/hero-dark.svg" width="100%">
   </picture>
 </a>
 
-<p align="center">
-  <a href="mailto:info@quobit.es"><img src="https://img.shields.io/badge/Cuéntame_tu_proyecto-2f5bea?style=for-the-badge" alt="Escríbeme a info@quobit.es"></a>
-  <a href="https://quobit.es"><img src="https://img.shields.io/badge/quobit.es-0c1530?style=for-the-badge&logo=googlechrome&logoColor=8fb0ff" alt="quobit.es"></a>
-  <a href="https://www.linkedin.com/in/mauro-serrano-8b4191366"><img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"></a>
-  <a href="https://t.me/TrainPickerBot?start=github"><img src="https://img.shields.io/badge/Prueba_TrainPicker-6b1f7a?style=for-the-badge&logo=telegram&logoColor=white" alt="Prueba TrainPicker en Telegram"></a>
+<p>
+  <a href="mailto:info@quobit.es"><img src="https://img.shields.io/badge/Cuéntame_tu_proyecto-info%40quobit.es-2f5bea?style=flat-square" alt="Cuéntame tu proyecto: info@quobit.es" height="28"></a>
+  <a href="https://www.linkedin.com/in/mauro-serrano-8b4191366"><img src="https://img.shields.io/badge/LinkedIn-Mauro_Serrano-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn de Mauro Serrano" height="28"></a>
+  <a href="https://quobit.es"><img src="https://img.shields.io/badge/Web-quobit.es-0c1530?style=flat-square" alt="Web de Quobit: quobit.es" height="28"></a>
 </p>
 
-Hola, soy **Mauro**. Desarrollo software de principio a fin —backend, frontend, móvil y despliegue— y junto a mi socio llevo **[Quobit](https://quobit.es)**, un estudio de software en Sevilla. Hacemos webs, apps y automatizaciones a medida para empresas y particulares, **sin intermediarios**: hablas directamente con quien escribe el código.
+Hola, soy **Mauro**. Desarrollo software de principio a fin (backend, frontend, móvil y despliegue) y, junto a mi socio, llevo **[Quobit](https://quobit.es)**, un estudio de software en Sevilla. Hacemos webs, apps y automatizaciones a medida para empresas y particulares, sin intermediarios: hablas directamente con quien escribe el código.
 
-## Proyectos en producción
+## Lo que tengo en producción
 
-Productos propios, diseñados, desarrollados y desplegados de principio a fin.
+**[TrainPicker](https://trainpicker.quobit.es)**, bot de Telegram. Vigila trenes completos de Renfe y Ouigo y te avisa en cuanto se libera una plaza, con un botón que abre la compra ya rellenada. [Pruébalo en Telegram](https://t.me/TrainPickerBot?start=github).
+<sub>Python · API de Telegram · Docker</sub>
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://trainpicker.quobit.es"><picture>
-        <source media="(prefers-color-scheme: dark)" srcset="./profile/card-trainpicker-dark.svg">
-        <img alt="TrainPicker: bot de Telegram que avisa cuando se libera plaza en un tren completo de Renfe u Ouigo" src="./profile/card-trainpicker-light.svg" width="100%">
-      </picture></a>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://cardeo.quobit.es"><picture>
-        <source media="(prefers-color-scheme: dark)" srcset="./profile/card-cardeo-dark.svg">
-        <img alt="Cardeo: juego de cartas multijugador en tiempo real para jugar con la gente que tienes delante" src="./profile/card-cardeo-light.svg" width="100%">
-      </picture></a>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://planabc.quobit.es"><picture>
-        <source media="(prefers-color-scheme: dark)" srcset="./profile/card-planabc-dark.svg">
-        <img alt="PlanABC: app para parejas con 27 planes, uno por letra del abecedario" src="./profile/card-planabc-light.svg" width="100%">
-      </picture></a>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://mauroz9.github.io/reel-gallery/"><picture>
-        <source media="(prefers-color-scheme: dark)" srcset="./profile/card-reel-gallery-dark.svg">
-        <img alt="reel-gallery: galería mosaico animada con scroll para fotos, vídeos y Live Photos, con visor 3D" src="./profile/card-reel-gallery-light.svg" width="100%">
-      </picture></a>
-    </td>
-  </tr>
-</table>
+**[Cardeo](https://cardeo.quobit.es)**, cartas online para jugar con la peña que tienes delante. Cada uno juega desde su móvil, con salas en tiempo real y cinco modos de juego.
+<sub>React · TypeScript · Socket.IO · Node.js</sub>
+
+**[PlanABC](https://planabc.quobit.es)**, app para parejas (PWA). 27 planes, uno por cada letra del abecedario, en el orden que os apetezca.
+<sub>Next.js · Spring Boot · PostgreSQL</sub>
+
+**[reel-gallery](https://github.com/mauroz9/reel-gallery)**, paquete npm de código abierto. Galería mosaico que se anima con el scroll, para fotos, vídeos y Live Photos, con visor 3D opcional. [Ver la demo](https://mauroz9.github.io/reel-gallery/).
+<sub>TypeScript · three.js · React, Vue, Svelte, Angular y Web Component</sub>
 
 ## En qué te puedo ayudar
 
-- **Webs y apps a medida** — de la web de tu negocio a una app con usuarios, pagos, reservas y un panel para gestionarlo tú.
-- **Automatizaciones** — ese proceso que alguien repite cada día con hojas de cálculo y correos, conectado y funcionando solo.
-- **IA aplicada** — asistentes, resúmenes y lectura de PDFs y formularios conectados a las herramientas que ya usas.
-- **Mantenimiento** — seguimos después del lanzamiento, con arreglos, mejoras y alguien que coge el teléfono.
+- **Webs y apps a medida**: de la web de tu negocio a una app con usuarios, pagos, reservas y un panel para gestionarlo tú.
+- **Automatizaciones**: ese proceso que alguien repite cada día con hojas de cálculo y correos, conectado y funcionando solo.
+- **IA aplicada**: asistentes, resúmenes y lectura de PDFs y formularios, conectados a las herramientas que ya usas.
+- **Mantenimiento**: seguimos después del lanzamiento, con arreglos, mejoras y alguien que coge el teléfono.
 
 ## Stack
 
@@ -67,17 +45,14 @@ Productos propios, diseñados, desarrollados y desplegados de principio a fin.
 
 ## Actividad
 
-<p>
-  <img src="./profile/stats.svg" alt="Estadísticas de GitHub" height="165">
-  <img src="./profile/top-langs.svg" alt="Lenguajes más usados" height="165">
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./profile/activity-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="./profile/activity-light.svg">
+  <img alt="Actividad en GitHub de los últimos 12 meses: calendario de contribuciones, rachas y lenguajes más usados." src="./profile/activity-dark.svg" width="100%">
+</picture>
 
-[![Racha en GitHub](https://streak-stats.demolab.com?user=mauroz9&theme=tokyonight&hide_border=true&border_radius=12&locale=es&short_numbers=true)](https://git.io/streak-stats)
-[![Wakatime](https://wakatime.com/badge/user/61018de8-b42e-4f30-aa6a-d19283570bca.svg)](https://wakatime.com/@mauroz9)
+<sub>La genera cada noche <a href=".github/workflows/actividad.yml">este workflow</a> con la API de GitHub.</sub>
 
 ---
 
-<p align="center">
-  <b>¿Tienes algo en mente?</b> Escríbeme a <a href="mailto:info@quobit.es">info@quobit.es</a> — te contesto en uno o dos días.<br>
-  <sub>Muchos proyectos empiezan con un «no sé si esto lo hacéis».</sub>
-</p>
+**¿Tienes algo en mente?** Escríbeme a [info@quobit.es](mailto:info@quobit.es) y te contesto en uno o dos días. Muchos proyectos empiezan con un «no sé si esto lo hacéis».
