@@ -249,7 +249,7 @@ BUTTONS = [  # (fichero, texto, icono, primario)
 def button(fname, label, ic, primary):
     """Botones de quobit.es (Button.module.css): píldora, Geist 500, primario azul con flecha
     a la derecha; secundarios en azul marino con borde fino y el icono de la red delante."""
-    h, padx, fs, isz, gap = 48, 22, 17, 20, 10
+    h, padx, fs, isz, gap = 44, 18, 16, 18, 8  # 44 px: alto mínimo de Button.module.css
     tw = text_width("GeistMedium", label, fs)
     w = padx * 2 + tw + gap + isz
     bg, fg, ic_col = (T["accent"], "#ffffff", "#ffffff") if primary else (T["surface"], T["fg"], T["ink"])
