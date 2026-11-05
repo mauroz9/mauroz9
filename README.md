@@ -16,16 +16,16 @@ Hola, soy **Mauro**. Desarrollo software de principio a fin (backend, frontend, 
 
 ## Lo que tengo en producción
 
-**[TrainPicker](https://trainpicker.quobit.es)**, bot de Telegram. Vigila trenes completos de Renfe y Ouigo y te avisa en cuanto se libera una plaza, con un botón que abre la compra ya rellenada. [Pruébalo en Telegram](https://t.me/TrainPickerBot?start=github).
+**[TrainPicker](https://trainpicker.quobit.es)**, bot de Telegram. Vigila trenes completos de Renfe y Ouigo y te avisa en cuanto se libera una plaza, con un botón que abre la compra ya rellenada. [Pruébalo en Telegram](https://t.me/TrainPickerBot?start=github).<br>
 <sub>Python · API de Telegram · Docker</sub>
 
-**[Cardeo](https://cardeo.quobit.es)**, cartas online para jugar con la peña que tienes delante. Cada uno juega desde su móvil, con salas en tiempo real y cinco modos de juego.
+**[Cardeo](https://cardeo.quobit.es)**, cartas online para jugar con la peña que tienes delante. Cada uno juega desde su móvil, con salas en tiempo real y cinco modos de juego.<br>
 <sub>React · TypeScript · Socket.IO · Node.js</sub>
 
-**[PlanABC](https://planabc.quobit.es)**, app para parejas (PWA). 27 planes, uno por cada letra del abecedario, en el orden que os apetezca.
+**[PlanABC](https://planabc.quobit.es)**, app para parejas (PWA). 27 planes, uno por cada letra del abecedario, en el orden que os apetezca.<br>
 <sub>Next.js · Spring Boot · PostgreSQL</sub>
 
-**[reel-gallery](https://github.com/mauroz9/reel-gallery)**, paquete npm de código abierto. Galería mosaico que se anima con el scroll, para fotos, vídeos y Live Photos, con visor 3D opcional. [Ver la demo](https://mauroz9.github.io/reel-gallery/).
+**[reel-gallery](https://github.com/mauroz9/reel-gallery)**, paquete npm de código abierto. Galería mosaico que se anima con el scroll, para fotos, vídeos y Live Photos, con visor 3D opcional. [Ver la demo](https://mauroz9.github.io/reel-gallery/).<br>
 <sub>TypeScript · three.js · React, Vue, Svelte, Angular y Web Component</sub>
 
 ## En qué te puedo ayudar
