@@ -17,9 +17,11 @@ Decisiones y su porqué (anti-slop R-31):
 - Sin botones dentro del hero: en una imagen no se pueden pulsar. Los botones de verdad
   van justo debajo, como enlaces.
 - Fichas de proyecto como las de «Lo que ya funciona» del prototipo: captura en un marco de
-  ventana, línea de estado y etiqueta a mano. Las capturas son las webs reales a 1280×800,
-  enteras, sin recortar.
-- Ritmo variado: ficha ancha, dos medias y otra ancha invertida, en vez de cuatro iguales.
+  ventana, línea de estado y etiqueta a mano. Las capturas son pantallas reales de cada
+  producto por dentro (no su landing), compuestas por scripts/shots.py; reel-gallery sigue
+  con su demo, que es el producto en sí.
+- Ritmo variado: ficha ancha y dos parejas (apps en producción, paquetes de código abierto),
+  en vez de cinco iguales.
 - Iconos Phosphor: los que usa quobit.es (sprite del prototipo).
 - Verde de estado (--ok) solo en el punto «en producción»: es un estado real comprobado.
 """
@@ -141,6 +143,11 @@ PROJECTS = {
              "con un visor 3D opcional. Para React, Vue, Svelte, Angular o como Web Component.",
         stack="TypeScript · three.js", host="Ver la demo",
         sticker="código abierto"),
+    "pwa": dict(
+        title="pwa-install-assistant", kind="Paquete npm", status="Publicado en npm",
+        desc="Asistente para instalar tu web app en la pantalla de inicio: señala el botón real "
+             "de cada móvil y avanza solo donde el navegador lo permite.",
+        stack="TypeScript · sin dependencias", host="Ver la demo"),
 }
 
 
@@ -277,7 +284,7 @@ def main():
     hero()
     card_wide("trainpicker")
     card_half_pair("cardeo", "planabc")
-    card_wide("reel", mirrored=True)
+    card_half_pair("reel", "pwa")
     for b in BUTTONS:
         button(*b)
     print("ok ->", OUT)

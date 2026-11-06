@@ -18,7 +18,10 @@ Hola, soy **Mauro**. Desarrollo software de principio a fin (backend, frontend, 
   <a href="https://planabc.quobit.es"><img src="./profile/card-planabc.svg" width="49%" alt="PlanABC, app para parejas en producción: 27 planes, uno por cada letra del abecedario."></a>
 </p>
 
-<a href="https://mauroz9.github.io/reel-gallery/"><img src="./profile/card-reel.svg" width="100%" alt="reel-gallery, paquete npm de código abierto: galería mosaico animada con el scroll, con visor 3D opcional."></a>
+<p>
+  <a href="https://mauroz9.github.io/reel-gallery/"><img src="./profile/card-reel.svg" width="49%" alt="reel-gallery, paquete npm de código abierto: galería mosaico animada con el scroll, con visor 3D opcional."></a>
+  <a href="https://mauroz9.github.io/pwa-install-assistant/"><img src="./profile/card-pwa.svg" width="49%" alt="pwa-install-assistant, paquete npm de código abierto: asistente para instalar una web app en la pantalla de inicio, que señala el botón real de cada móvil."></a>
+</p>
 
 ## En qué te puedo ayudar
 
