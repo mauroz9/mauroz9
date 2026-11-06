@@ -1,0 +1,157 @@
+<!doctype html>
+<!-- Miniatura de Cardeo para la ficha del perfil (scripts/shots.py la captura a 1120×700).
+     Explica el producto de un vistazo: la peña alrededor de una mesa, cada uno con su móvil,
+     y las cartas en el centro. Colores, rosetón, palos, cartas y reverso «azulejo» son los de
+     cardeo-app (tokens.css, Icons.tsx, PlayingCard.tsx, CardBack.tsx); fuentes de cardeo-web. -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face { font-family: "Baloo 2"; src: url(fonts/baloo-2.woff2) format("woff2"); font-weight: 400 800; }
+@font-face { font-family: "Work Sans"; src: url(fonts/work-sans.woff2) format("woff2"); font-weight: 100 900; }
+:root {
+  --cobalto: #1b4b7a; --cobalto-2: #24578a; --sevillano-200: #a9d3e8; --cal: #f7f2e9;
+  --terracota: #b44f27; --albero: #dcae6b; --olivo: #5f6e2e; --dorado: #e3a63d; --noche: #1e2126;
+  --card: #fffdf8; --card-border: #e2d8c6;
+  --oros: #a97724; --copas: #b44f27; --espadas: #1b4b7a; --bastos: #5f6e2e;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1120px; height: 700px; overflow: hidden; }
+body {
+  position: relative; font-family: "Work Sans", sans-serif; color: var(--cal);
+  background-color: var(--cobalto);
+  background-image: repeating-conic-gradient(var(--cobalto-2) 0% 25%, var(--cobalto) 0% 50%);
+  background-size: 56px 56px;
+}
+.shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(18,46,76,.92) 0%, rgba(18,46,76,.55) 40%, rgba(18,46,76,0) 62%); }
+
+/* ---------- texto ---------- */
+.copy { position: absolute; left: 64px; top: 0; bottom: 0; width: 420px; display: flex; flex-direction: column; justify-content: center; }
+.brand { display: flex; align-items: center; gap: 18px; }
+.app-icon { width: 84px; height: 84px; border-radius: 22px; background: var(--cobalto);
+  box-shadow: 0 0 0 3px rgba(247,242,233,.25), 0 10px 24px rgba(0,0,0,.3); display: grid; place-items: center; }
+.app-icon svg { width: 64px; height: 64px; }
+.name { font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 92px; line-height: .9; letter-spacing: -1px; padding-top: 14px; }
+.claim { font-weight: 700; font-size: 34px; line-height: 1.12; margin-top: 30px; }
+.sub { font-size: 25px; color: var(--sevillano-200); margin-top: 12px; }
+.chips { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
+.chip { font-weight: 600; font-size: 19px; padding: 8px 15px; border-radius: 999px; background: rgba(247,242,233,.12); border: 1.5px solid rgba(247,242,233,.3); }
+
+/* ---------- mesa ---------- */
+.table { position: absolute; left: 826px; top: 350px; width: 390px; height: 390px; margin: -195px 0 0 -195px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #f0dcb3 0%, #e6c993 70%, #d9b67a 100%);
+  box-shadow: 0 0 0 14px #9c6a3a, 0 0 0 18px #7a4f29, 0 30px 60px rgba(0,0,0,.45); }
+.table::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background-image: radial-gradient(rgba(122,79,41,.18) 1.4px, transparent 1.6px); background-size: 16px 16px; }
+.pile { position: absolute; left: 826px; top: 362px; }
+.pile > * { position: absolute; }
+
+/* carta de cardeo-app: índice arriba a la izquierda y pips o figura */
+.pc { width: 92px; height: 129px; border-radius: 6px; background: var(--card); border: 1px solid var(--card-border);
+  box-shadow: 0 6px 14px rgba(60,35,10,.28); padding: 8px; display: flex; flex-direction: column; }
+.pc .idx { display: flex; align-items: center; gap: 3px; font-family: "Baloo 2"; font-weight: 800; font-size: 21px; line-height: 1; }
+.pc .idx svg { width: 16px; height: 16px; }
+.pc .body { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+.pc .body .big { width: 54px; height: 54px; }
+.pc .pips { flex: 1; display: grid; grid-template-columns: 1fr 1fr; align-content: space-around; justify-items: center; padding: 2px 8px; }
+.pc .pips svg { width: 19px; height: 19px; }
+.pc .pips .mid { grid-column: span 2; }
+.pc .ros { position: absolute; width: 60px; height: 60px; opacity: .2; }
+.pc .fig { position: relative; width: 32px; height: 32px; }
+
+/* reverso «azulejo» */
+.back { width: 92px; height: 129px; border-radius: 7px; background: var(--cobalto); padding: 7px; box-shadow: 0 5px 12px rgba(30,20,10,.3); }
+.back > div { width: 100%; height: 100%; border-radius: 3px; border: 1.5px solid rgba(247,242,233,.55);
+  background-color: var(--cobalto); background-image: repeating-conic-gradient(var(--cal) 0% 25%, var(--cobalto) 0% 50%); background-size: 19px 19px;
+  display: grid; place-items: center; }
+.back > div > span { width: 50px; height: 50px; border-radius: 50%; background: var(--albero); box-shadow: 0 0 0 3px var(--cobalto); display: grid; place-items: center; }
+.back svg { width: 32px; height: 32px; color: var(--terracota); }
+
+/* ---------- móviles alrededor de la mesa ---------- */
+.seat { position: absolute; left: 826px; top: 350px; width: 0; height: 0; }
+.phone { position: absolute; left: -62px; top: 112px; width: 124px; height: 214px; border-radius: 22px; background: #15171b; padding: 6px;
+  box-shadow: 0 14px 26px rgba(0,0,0,.4); }
+.screen { width: 100%; height: 100%; border-radius: 17px; overflow: hidden; position: relative;
+  background: #e9d6ad; background-image: radial-gradient(rgba(122,79,41,.16) 1.2px, transparent 1.4px); background-size: 9px 9px; }
+.who { position: absolute; top: 14px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-family: "Baloo 2"; font-weight: 800; font-size: 19px; color: var(--cal); box-shadow: 0 0 0 2.5px var(--card); }
+.nm { font-weight: 700; font-size: 13px; color: var(--noche); }
+.hand { position: absolute; left: 50%; bottom: 6px; width: 0; height: 0; }
+.hand .pc { position: absolute; transform-origin: 50% 120%; width: 54px; height: 76px; padding: 5px; border-radius: 4px; }
+.hand .pc .idx { font-size: 13px; }
+.hand .pc .idx svg { width: 10px; height: 10px; }
+.hand .pc .body .big { width: 26px; height: 26px; }
+.hand .pc .pips { padding: 1px 4px; }
+.hand .pc .pips svg { width: 10px; height: 10px; }
+.hand .pc .ros { width: 34px; height: 34px; }
+.hand .pc .fig { width: 18px; height: 18px; }
+.island { position: absolute; top: 6px; left: 50%; width: 38px; height: 10px; margin-left: -19px; border-radius: 6px; background: #15171b; z-index: 2; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="ros" viewBox="0 0 52 52"><polygon fill="currentColor" points="26,2 32,14 45,10 40,23 52,26 40,29 45,42 32,38 26,50 20,38 7,42 12,29 0,26 12,23 7,10 20,14"/></symbol>
+    <symbol id="oros" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="4.6" fill="currentColor"/></symbol>
+    <symbol id="copas" viewBox="0 0 20 20"><g fill="currentColor"><path d="M3.4 2.6h13.2v3.9a6.6 6.6 0 0 1-13.2 0z"/><rect x="8.9" y="12.4" width="2.2" height="3.6"/><rect x="5.6" y="15.8" width="8.8" height="2.1" rx="1.05"/></g></symbol>
+    <symbol id="espadas" viewBox="0 0 20 20"><g fill="currentColor"><path d="M10 0.8l3.4 9.4h-6.8z"/><rect x="2.8" y="10" width="14.4" height="2.8" rx="1.4"/><rect x="8.4" y="12.8" width="3.2" height="6" rx="1.2"/></g></symbol>
+    <symbol id="bastos" viewBox="0 0 20 20"><g fill="currentColor"><rect x="8.2" y="1.4" width="3.6" height="17.2" rx="1.8" transform="rotate(24 10 10)"/><circle cx="5" cy="14.8" r="2.6"/><circle cx="15" cy="5.2" r="2.6"/></g></symbol>
+    <symbol id="rey" viewBox="0 0 32 32"><g fill="currentColor"><path d="M5 26l-2-14 6 4 7-8 7 8 6-4-2 14z"/><rect x="5" y="26" width="22" height="3" rx="1"/><circle cx="16" cy="6" r="1.6"/><circle cx="6" cy="12" r="1.4"/><circle cx="26" cy="12" r="1.4"/></g></symbol>
+    <symbol id="sota" viewBox="0 0 32 32"><g fill="currentColor"><path d="M16 3c-4 0-6.5 2.4-6.9 5.4 2-1.6 4.3-2.4 6.9-2.4s4.9.8 6.9 2.4C22.5 5.4 20 3 16 3z"/><circle cx="16" cy="11" r="6"/><path d="M6 30c0-6.6 4.5-11 10-11s10 4.4 10 11z"/></g></symbol>
+  </defs>
+</svg>
+
+<div class="shade"></div>
+
+<div class="table"></div>
+<div class="pile" id="pile"></div>
+<div id="seats"></div>
+
+<div class="copy">
+  <div class="brand">
+    <div class="app-icon"><svg viewBox="0 0 52 52"><polygon fill="#f7f2e9" points="26,7 31,17 42,14 38,25 48,26 38,27 42,38 31,35 26,45 21,35 10,38 14,27 4,26 14,25 10,14 21,17"/><circle cx="26" cy="26" r="5" fill="#b44f27"/></svg></div>
+    <div class="name">Cardeo</div>
+  </div>
+  <div class="claim">Cartas online con la peña que tienes delante</div>
+  <div class="sub">Pon la mesa, saca el móvil.</div>
+  <div class="chips"><span class="chip">5 juegos</span><span class="chip">de 2 a 9</span><span class="chip">sin descargas</span></div>
+</div>
+
+<script>
+// Cartas con el mismo esquema que PlayingCard.tsx: as con el palo grande, pips en filas de 2, figuras con rosetón.
+const COLOR = { oros: "var(--oros)", copas: "var(--copas)", espadas: "var(--espadas)", bastos: "var(--bastos)" };
+const use = (id, cls = "") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
+function rows(n) { const r = []; let left = n; const odd = n % 2, mid = Math.ceil(n / 4); let i = 0;
+  while (left > 0) { if (odd && i === mid && left % 2) { r.push(1); left--; } else { const t = Math.min(2, left); r.push(t); left -= t; } i++; } return r; }
+function card(rank, suit) {
+  const fig = { 10: "sota", 12: "rey" }[rank];
+  let body;
+  if (fig) body = `<div class="body">${use("ros", "ros")}${use(fig, "fig")}</div>`;
+  else if (rank === 1) body = `<div class="body">${use(suit, "big")}</div>`;
+  else body = `<div class="pips">${rows(rank).map(c => c === 1 ? `<span class="mid">${use(suit)}</span>` : use(suit) + use(suit)).join("")}</div>`;
+  return `<div class="pc" style="color:${COLOR[suit]}"><div class="idx">${rank}${use(suit)}</div>${body}</div>`;
+}
+const back = () => `<div class="back"><div><span>${use("ros")}</span></div></div>`;
+
+// la baza en el centro de la mesa
+const pile = [[back(), -70, -30, -14], [card(3, "copas"), -40, -62, -6], [card(1, "oros"), 4, -70, 9], [card(7, "espadas"), -14, -40, 22]];
+document.getElementById("pile").innerHTML = pile.map(([h, x, y, r]) =>
+  `<div style="left:${x - 46}px;top:${y - 30}px;transform:rotate(${r}deg)">${h}</div>`).join("");
+
+// la peña: un móvil por asiento, mirando al centro
+const seats = [
+  { rot: 45, n: "Lucía", c: "var(--terracota)", hand: [[5, "copas"], [1, "bastos"], [12, "oros"]] },
+  { rot: 135, n: "Dani", c: "var(--olivo)", hand: [[4, "espadas"], [7, "oros"], [10, "bastos"]] },
+  { rot: 225, n: "Marta", c: "#a97724", hand: [[2, "oros"], [6, "copas"], [1, "espadas"]] },
+  { rot: 315, n: "Lola", c: "var(--cobalto)", hand: [[12, "copas"], [3, "bastos"], [5, "oros"]] },
+];
+document.getElementById("seats").innerHTML = seats.map(s => `
+  <div class="seat" style="transform:rotate(${s.rot}deg)">
+    <div class="phone"><div class="island"></div><div class="screen">
+      <div class="who"><div class="av" style="background:${s.c}">${s.n[0]}</div><div class="nm">${s.n}</div></div>
+      <div class="hand">${s.hand.map(([r, p], i) => `<div style="position:absolute;left:-27px;top:-80px;transform:translateX(${(i - 1) * 28}px) translateY(${Math.abs(i - 1) * 6}px) rotate(${(i - 1) * 12}deg)">${card(r, p)}</div>`).join("")}</div>
+    </div></div>
+  </div>`).join("");
+</script>
+</body>
+</html>

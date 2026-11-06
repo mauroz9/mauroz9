@@ -2,11 +2,14 @@
 """Compone las capturas de producto de las fichas (assets/shots/*.jpg, 1120×700) a partir de
 pantallas reales de cada app, no de su landing.
 
-Uso: python3 scripts/shots.py <carpeta con las capturas originales>   (requiere Pillow)
+Uso: python3 scripts/shots.py <carpeta con las capturas originales>
+     (requiere Pillow y Google Chrome, que renderiza las maquetas HTML)
 
-Origen de cada captura (repos de mauroz9):
-  tp-chat.png                      trainpicker            docs/img/chat.png (textos reales del bot)
-  cd-app-menu/sala/partida.webp    cardeo-web             sitio/img/app-*.webp
+Maquetas HTML (assets/shots/src/, cada una explica de dónde salen sus textos y colores):
+  trainpicker.html   el bot en Telegram simulado, con los mensajes y botones reales del bot
+  cardeo.html        miniatura que explica el juego: la peña en la mesa, cada uno con su móvil
+
+Capturas originales (repos de mauroz9), en la carpeta que se pasa como argumento:
   pa-planes-ancho.png, pa-plan-movil.png
                                    planabc-front          public/icons/screenshots/
   pwa-*.jpg                        pwa-install-assistant  docs/support/*.jpg (simulador iOS y emulador Android)
@@ -15,7 +18,10 @@ Después: python3 scripts/build.py para regenerar las fichas.
 """
 from __future__ import annotations
 
+import os
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
@@ -60,20 +66,27 @@ def phones_row(src: Path, files: list[str], bg: str, h: int, gap: int, border=No
     return canvas
 
 
+CHROME = os.environ.get("CHROME", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+
+
+def render_html(name: str) -> Image.Image:
+    """Captura assets/shots/src/<name>.html con Chrome sin ventana, a 2x y reducida a 1120×700."""
+    with tempfile.TemporaryDirectory() as tmp:
+        png = Path(tmp) / "shot.png"
+        subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars",
+                        "--force-device-scale-factor=2", f"--window-size={W},{H}",
+                        "--virtual-time-budget=3000", f"--screenshot={png}",
+                        (OUT / "src" / f"{name}.html").as_uri()],
+                       check=True, capture_output=True)
+        return Image.open(png).convert("RGB").resize((W, H), Image.LANCZOS)
+
+
 def trainpicker(src: Path) -> Image.Image:
-    im = Image.open(src / "tp-chat.png").convert("RGB")
-    # fuera el marco redondeado exterior y el pie de la maqueta: queda el chat
-    im = im.crop((45, 45, im.width - 45, 925))
-    canvas = Image.new("RGBA", (W, H), "#efe9f1")
-    k = min((W - 40) / im.width, (H - 40) / im.height)
-    im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
-    canvas.paste(im, ((W - im.width) // 2, (H - im.height) // 2))
-    return canvas
+    return render_html("trainpicker")
 
 
 def cardeo(src: Path) -> Image.Image:
-    return phones_row(src, ["cd-app-menu.webp", "cd-app-sala.webp", "cd-app-partida.webp"],
-                      "#1a4c79", 640, 34)
+    return render_html("cardeo")
 
 
 def planabc(src: Path) -> Image.Image:

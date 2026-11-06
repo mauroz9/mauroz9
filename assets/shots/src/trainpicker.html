@@ -1,0 +1,144 @@
+<!doctype html>
+<!-- Captura simulada de TrainPicker en Telegram para la ficha del perfil (scripts/shots.py la
+     captura a 1120×700). Los mensajes y botones son los textos reales del bot, copiados de
+     trainpicker/main.py (_build_trains_message, confirmación de alerta) y scheduler.py (aviso
+     de plaza libre); la ruta, la fecha y los precios son de ejemplo, los de docs/img/chat.png. -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+:root { --tp: #6b1f7a; --tp-glow: #9b3fb0; --link: #007aff; --out: #e1fec6; --meta: #8e8e93; --meta-out: #45a341; }
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1120px; height: 700px; overflow: hidden; }
+body { position: relative; font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased;
+  background: radial-gradient(700px 520px at 78% 30%, rgba(155,63,176,.55), transparent 70%),
+              radial-gradient(600px 500px at 15% 90%, rgba(107,31,122,.6), transparent 70%), #1a0b20; }
+
+/* ---------- móvil ---------- */
+.phone { position: absolute; top: 46px; width: 390px; height: 820px; border-radius: 62px; background: #0b0b0d; padding: 11px;
+  box-shadow: 0 0 0 2px #3a3340, 0 40px 80px rgba(0,0,0,.55); }
+.screen { position: relative; width: 100%; height: 100%; border-radius: 52px; overflow: hidden; display: flex; flex-direction: column;
+  /* fondo de chat: degradado verde claro con dibujitos, como el tema por defecto */
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255,255,255,.35) 0 2px, transparent 3px) 0 0 / 46px 46px,
+    radial-gradient(circle at 70% 60%, rgba(255,255,255,.28) 0 1.5px, transparent 2.5px) 0 0 / 38px 38px,
+    linear-gradient(160deg, #dbe6ad 0%, #a9cc93 45%, #c6d99a 75%, #9cc38c 100%); }
+.island { position: absolute; top: 11px; left: 50%; width: 118px; height: 34px; margin-left: -59px; border-radius: 20px; background: #000; z-index: 5; }
+.status { height: 52px; display: flex; justify-content: space-between; align-items: center; padding: 6px 34px 0 46px; font-weight: 600; font-size: 16.5px; background: rgba(247,247,247,.94); }
+.status .icons { display: flex; gap: 6px; align-items: center; }
+.bar { display: flex; align-items: center; padding: 4px 12px 10px; background: rgba(247,247,247,.94); border-bottom: .5px solid rgba(0,0,0,.18); }
+.back { color: var(--link); font-size: 17px; display: flex; align-items: center; gap: 2px; width: 90px; }
+.back svg { width: 12px; height: 20px; }
+.badge { background: var(--link); color: #fff; font-size: 13px; font-weight: 600; border-radius: 10px; padding: 1px 6px; margin-left: 4px; }
+.title { flex: 1; text-align: center; line-height: 1.15; }
+.title b { font-size: 16.5px; font-weight: 600; display: block; }
+.title span { font-size: 13px; color: var(--meta); }
+.avatar { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; margin-left: 52px; }
+.chat { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 6px; justify-content: flex-start; }
+.day { align-self: center; font-size: 13px; font-weight: 600; color: #fff; background: rgba(66,100,58,.38); border-radius: 12px; padding: 3px 10px; margin: 2px 0 4px; }
+
+/* ---------- burbujas ---------- */
+.msg { position: relative; max-width: 352px; padding: 7px 11px 8px; border-radius: 18px; font-size: 14.6px; line-height: 1.32; color: #000; background: #fff; align-self: flex-start;
+  box-shadow: 0 1px 1px rgba(0,0,0,.12); }
+.msg.in { border-bottom-left-radius: 6px; }
+.msg.out { align-self: flex-end; background: var(--out); border-bottom-right-radius: 6px; }
+.msg .t { float: right; font-size: 11.5px; color: var(--meta); margin: 8px 0 -4px 10px; }
+.msg.out .t { color: var(--meta-out); }
+.msg p + p { margin-top: 10px; }
+.cmd { color: var(--link); }
+.kb { display: flex; flex-direction: column; gap: 4px; max-width: 352px; width: 352px; margin-top: -2px; }
+.kb .row { display: flex; gap: 4px; }
+.kb .b { flex: 1; text-align: center; font-size: 15px; font-weight: 600; color: #fff; padding: 9px 6px; border-radius: 10px;
+  background: rgba(56,86,50,.5); backdrop-filter: blur(8px); text-shadow: 0 1px 1px rgba(0,0,0,.15); }
+.kb .b.url::after { content: "↗"; font-size: 11px; position: relative; top: -5px; margin-left: 3px; opacity: .85; }
+
+/* ---------- notificación ---------- */
+.notif { position: absolute; left: 392px; top: 584px; width: 352px; padding: 13px 15px 14px; border-radius: 24px; z-index: 10;
+  background: rgba(245,242,247,.86); backdrop-filter: blur(20px); box-shadow: 0 24px 50px rgba(0,0,0,.45), 0 0 0 .5px rgba(0,0,0,.08);
+  display: flex; gap: 11px; transform: rotate(-3deg); }
+.notif .ic { width: 40px; height: 40px; border-radius: 10px; overflow: hidden; flex: none; }
+.notif .h { display: flex; justify-content: space-between; font-size: 15px; }
+.notif .h b { font-weight: 600; }
+.notif .h span { color: #6d6d72; font-size: 13.5px; }
+.notif .x { font-size: 15px; line-height: 1.3; color: #111; margin-top: 1px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="logo" viewBox="0 0 64 64">
+    <rect width="64" height="64" fill="#6b1f7a"/>
+    <path d="M32 9 C22.6 9 15 16.6 15 26 C15 38.5 32 55 32 55 C32 55 49 38.5 49 26 C49 16.6 41.4 9 32 9 Z" fill="#ffffff"/>
+    <rect x="24" y="17" width="16" height="17" rx="5" fill="#6b1f7a"/>
+    <rect x="27" y="20" width="10" height="6" rx="1.5" fill="#ffffff"/>
+    <circle cx="28.5" cy="30" r="1.6" fill="#ffd34d"/><circle cx="35.5" cy="30" r="1.6" fill="#ffd34d"/>
+  </symbol>
+  <symbol id="chev" viewBox="0 0 12 20"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<template id="top">
+  <div class="island"></div>
+  <div class="status"><span>9:41</span><span class="icons">
+    <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+    <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.2a9.6 9.6 0 0 1 6.7 2.7l1.2-1.2A11.3 11.3 0 0 0 8 .5 11.3 11.3 0 0 0 .1 3.7l1.2 1.2A9.6 9.6 0 0 1 8 2.2Zm0 3.4a6.2 6.2 0 0 1 4.3 1.7l1.2-1.2A7.9 7.9 0 0 0 8 3.9a7.9 7.9 0 0 0-5.5 2.2l1.2 1.2A6.2 6.2 0 0 1 8 5.6Zm0 3.4c.7 0 1.4.3 1.9.8L8 11.7 6.1 9.8c.5-.5 1.2-.8 1.9-.8Z"/></svg>
+    <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.8" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2.5"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" opacity=".45"/></svg>
+  </span></div>
+  <div class="bar">
+    <div class="back"><svg><use href="#chev"/></svg>Chats<span class="badge">3</span></div>
+    <div class="title"><b>TrainPicker</b><span>bot</span></div>
+    <div class="avatar"><svg width="38" height="38"><use href="#logo"/></svg></div>
+  </div>
+</template>
+
+<!-- 1 · /buscar: listado de trenes con los botones de alerta -->
+<div class="phone" style="left:60px; transform: rotate(-4deg)"><div class="screen" data-top>
+  <div class="chat">
+    <div class="day">Hoy</div>
+    <div class="msg out"><span class="cmd">/buscar</span><span class="t">9:38 ✓✓</span></div>
+    <div class="msg in">
+      <p><b>🚆 Córdoba → Sevilla-Santa Justa</b><br>📅 13/11/2026</p>
+      <p>🚄 AVANT 07:05–07:50 · desde 11,20 € · ❌ <b>completo</b><br>
+         🚄 AVE 07:40–08:25 · desde 24,15 € · ✅ con plaza<br>
+         🚄 AVANT 08:15–09:00 · desde 11,20 € · ❌ <b>completo</b><span class="t">9:38</span></p>
+    </div>
+    <div class="kb">
+      <div class="row"><div class="b">🔔 Avisar: 07:05–07:50</div></div>
+      <div class="row"><div class="b">🔔 Avisar: 08:15–09:00</div></div>
+      <div class="row"><div class="b">🕒 Avisar con cualquier tren de una franja</div></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- 2 · alerta creada y, horas después, el aviso de plaza libre -->
+<div class="phone" style="left:672px; transform: rotate(3deg)"><div class="screen" data-top>
+  <div class="chat">
+    <div class="msg in">
+      <p>✅ <b>Alerta creada</b></p>
+      <p>Te aviso en cuanto se libere una plaza:<br>🛤️ Córdoba → Sevilla-Santa Justa<br>📅 13/11/2026 · 🕒 07:05–07:50<span class="t">9:39</span></p>
+    </div>
+    <div class="msg in">
+      <p>🚨 <b>¡Plaza libre!</b></p>
+      <p>🛤️ Córdoba → Sevilla-Santa Justa<br>📅 13/11/2026<br>🚄 AVANT 07:05–07:50 · desde 11,20 €</p>
+      <p>👉 Pulsa <b>Comprar ahora</b> antes de que vuele.<br>Sigo vigilando hasta que pulses <b>Ya tengo billete</b>.<span class="t">9:41</span></p>
+    </div>
+    <div class="kb">
+      <div class="row"><div class="b url">🛒 Comprar ahora</div></div>
+      <div class="row"><div class="b">✅ Ya tengo billete</div></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- el aviso llega aunque tengas el móvil bloqueado -->
+<div class="notif">
+  <div class="ic"><svg width="40" height="40"><use href="#logo"/></svg></div>
+  <div style="flex:1">
+    <div class="h"><b>TrainPicker</b><span>ahora</span></div>
+    <div class="x">🚨 <b>¡Plaza libre!</b><br>Córdoba → Sevilla-Santa Justa · 07:05</div>
+  </div>
+</div>
+
+<script>
+const tpl = document.getElementById("top");
+document.querySelectorAll("[data-top]").forEach(s => s.prepend(tpl.content.cloneNode(true)));
+</script>
+</body>
+</html>
